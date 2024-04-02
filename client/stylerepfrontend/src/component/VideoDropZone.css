@@ -1,0 +1,258 @@
+span {
+  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+body {
+  background-color: rgba(9, 9, 9, 0.91);
+  display: flex;
+  height: 100vh;
+  justify-content: center;
+  justify-items: center;
+  align-items: center;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+.dropped-video {
+  border-radius: 5px;
+  max-width: 100%;
+  max-height: 100%;
+  height: 1280px;
+  width: 720px;
+  transform: scale(2.7);
+}
+.column1 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.header1 {
+  cursor: pointer;
+  color: rgb(255, 229, 229);
+  margin-top: -11%;
+  margin-left: 4.7%;
+  font-family: 'Gill Sans', 'Gill Sans MT', 'Trebuchet MS', sans-serif;
+  font-size: 32px;
+}
+.video-drop-zone {
+  border: 2px dashed rgba(255, 236, 236, 0.762);
+  border-radius: 20px;
+  padding: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border 0.3s ease;
+  margin: 90px;
+  margin-top: 0.5%;
+  height: 100px !important;
+  transform: scale(1.1);
+}
+.file-input-label1 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transform: scale(1.095);
+}
+.file-input-label1 img {
+  width: 100px;
+  height: auto;
+  margin-bottom: 10px;
+  border-radius: 10px;
+}
+.file-input-video {
+  color: white;
+  cursor: pointer;
+  font-size: 17px;
+}
+.horizontal-box1 {
+  margin-left: 310px;
+  display: flex;
+  height: 50px;
+  margin-left: 290px;
+  transform: scale(1.1);
+  margin-bottom: -5px;
+}
+.section1 {
+  box-sizing: border-box;
+  padding: 0px;
+  padding-bottom: 40px;
+  position: relative;
+  margin-right: 14.3%;
+  margin-left: -13%;
+  border-radius: 7px;
+}
+.sample-video {
+  width: 220px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 7px;
+}
+.section-label1 {
+  text-align: center;
+  margin-top: 5px;
+  font-size: large;
+  color: rgba(255, 236, 236, 0.958);
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+.recommendedheader1 {
+  font-size: larger;
+  margin-left: -11.3%;
+  margin-top: -3.5%;
+  color: rgba(255, 236, 236, 0.958);
+  font-family: 'Gill Sans', 'Gill Sans MT', 'Calibri', 'Trebuchet MS', sans-serif;
+  position: fixed;
+  transform: scale(1.2);
+}
+.button1 {
+  position: absolute;
+  margin-top: 30.15%;
+  margin-left: 67%;
+  padding: 10px;
+  border: 1px solid rgba(255, 236, 236, 0.762);
+  border-radius: 7px;
+  background-color: rgba(9, 9, 9, 0);
+  color: rgba(255, 236, 236, 0.762);
+  cursor: pointer;
+  font-weight: bold;
+  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+.button1:hover {
+  color: black;
+  background-color: rgba(255, 236, 236, 0.762);
+  transition: all 1s;
+}
+.sample-video {
+  transition: all 1s;
+  cursor: pointer;
+}
+.sample-video:hover {
+  transform: scale(1.1);
+  transition: all 1s;
+}
+.file-input-video1 {
+  color: rgba(255, 236, 236, 0.762);
+  margin-top: -17%;
+  position: fixed;
+  font-size: 20px;
+  overflow: hidden;
+  border: 1px dashed rgba(255, 236, 236, 0.762);
+  padding: 5px;
+  border-radius: 0px 0px 7px 7px;
+}
+.file-input-video2 {
+  color: rgba(255, 236, 236, 0.762);
+  margin-top: -52%;
+  position: fixed;
+  font-size: 21px;
+  overflow: hidden;
+  border: 1px dashed rgba(255, 236, 236, 0.762);
+  padding: 6px;
+  border-radius: 0px 0px 7px 7px;
+}
+.sidebar {
+  width: 250px;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0);
+  position: fixed;
+  top: 0;
+  left: 0;
+  transform: translateX(-100%);
+  z-index: 1000;
+  transition: transform 0.2s ease;
+}
+.sidebar.open {
+  transform: translateX(0%);
+}
+.menu-bar-icon {
+  position: fixed;
+  top: 42px;
+  left: 36px;
+  cursor: pointer;
+}
+.icon-bar {
+  width: 30px;
+  height: 3.2px;
+  border-radius: 20px;
+  background-color: rgba(255, 236, 236, 0.958);
+  margin: 6.8px 0;
+}
+.content-container1.sidebar-open {
+  margin-left: 250px;
+}
+.sidebar-open {
+  width: calc(100% - 200px);
+}
+p {
+  color: white;
+  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  font-weight: 200;
+  font-size: 20px;
+  margin-top: 45%;
+  margin-bottom: -30%;
+  margin-left: 7%;
+}
+p:hover {
+  background-color: rgba(255, 236, 236, 0.958);
+  padding: 5px;
+  border-radius: 10px;
+  color: rgba(9, 9, 9, 0.91);
+}
+.link-style {
+  text-decoration: none;
+}
+.icon-bar1 {
+  margin-top: 38%;
+  width: 230px;
+  height: 2.0px;
+  border-radius: 0px 40px 40px 0px;
+  background-color: rgba(255, 236, 236, 0.958);
+  position: fixed;
+}
+.sample-video.selected {
+  box-shadow: 0px 0px 10px  rgb(255, 255, 255); 
+  animation: glow 1s infinite alternate;
+}
+.progress-bar {
+  height: 5px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  transition: width 0.3s ease-in-out;
+}
+.menu-bar-icon {
+  position: fixed;
+  top: 38px;
+  left: 32px;
+  cursor: pointer;
+  z-index: 1001;
+  color: rgb(255, 229, 229);
+}
+@keyframes glow {
+  to {
+    box-shadow: 0 0 15px rgba(255, 236, 236, 0.958); 
+  }
+}
+.sample-video.selected {
+  box-shadow: 0 0 15px rgba(255, 236, 236, 0.958);
+  animation: glow 0.5s ;
+}
+.sample-video {
+  transition: transform 0.3s ease-in-out;
+}
+.sample-video:hover {
+  transform: scale(1.1);
+}
+.button1 {
+  transition: color 0.3s ease-in-out, background-color 0.3s ease-in-out;
+}
+.button1:hover {
+  color: rgba(9, 9, 9, 0.91);
+  background-color: rgba(255, 236, 236, 0.762);
+}
+
+
+.progress-bar {
+  transition: width 0.5s ease-in-out;
+}

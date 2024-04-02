@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import '../component/ImageDropZone.css';
 import dragDropLogo from '../component/dragdropicon.png';
-import '../component/VideoStylerep';
 import { Link } from 'react-router-dom';
+import Hamburger from 'hamburger-react';
 const validImageFormats = ['image/jpeg', 'image/png', 'image/heic', 'image/webp'];
 
 const ImageDropZone = () => {
@@ -13,6 +13,12 @@ const ImageDropZone = () => {
   const [cursorStyle2, setCursorStyle2] = useState('pointer');
   const [isImageLoaded1, setIsImageLoaded1] = useState(false);
   const [isImageLoaded2, setIsImageLoaded2] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
 
   const handleDrop = (event, setImage, setCursorStyle, setIsImageLoaded) => {
     event.preventDefault();
@@ -76,10 +82,9 @@ const ImageDropZone = () => {
 
   const handleDownload = (image) => {
     if (image) {
-      // Create an anchor element
       const link = document.createElement('a');
       link.href = image;
-      link.download = 'image'; // You can set custom file name here
+      link.download = 'image';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -87,13 +92,49 @@ const ImageDropZone = () => {
       alert('No image to download.');
     }
   };
-  const handleHorizontalImageClick=(imageUrl)=>{
+
+  const handleHorizontalImageClick = (imageUrl) => {
+    setSelectedImage(imageUrl);
     setImage2(imageUrl);
     setIsImageLoaded2(true);
   };
 
+  const refreshPage = () => {
+    window.location.reload();
+  };
+
   return (
-    <div className="content-container">
+    <div className={`content-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
+      <button onClick={() => handleDownload(image2)}>Download</button>
+      <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <div className='icon-bar1'></div>
+        <Link to='/' onClick={toggleSidebar} className='link-style'>
+          <p>Image Style Replication</p>
+        </Link>
+        <div className='icon-bar1'></div>
+        <Link to='/v' onClick={toggleSidebar} className='link-style'>
+          <p>Video Style Replication</p>
+        </Link>
+        <div className='icon-bar1'></div>
+        <Link to='/s' onClick={toggleSidebar} className='link-style'>
+          <p>Sky Replacement</p>
+        </Link>
+        <div className='icon-bar1'></div>
+        <Link to='/i' onClick={toggleSidebar} className='link-style'>
+          <p>Image Quality Enhancer</p>
+        </Link>
+        <div className='icon-bar1'></div>
+        <Link to='/c' onClick={toggleSidebar} className='link-style'>
+          <p>Cartoon Image Replication</p>
+        </Link>
+        <div className='icon-bar1'></div>
+      </div>
+      <div className="menu-bar-icon" onClick={toggleSidebar}>
+        <Hamburger toggled={sidebarOpen} toggle={setSidebarOpen} size={35} rounded />
+      </div>
+      <header onClick={refreshPage}>
+        <h1>Image Style Replication</h1>
+      </header>
       <div className="column">
         {/* First ImageDropZone */}
         <div
@@ -146,7 +187,6 @@ const ImageDropZone = () => {
         {/* Second ImageDropZone */}
         <div
           className={`image-drop-zone ${isDragging ? 'drag-over' : ''}`}
-          
           onDrop={(event) => handleDrop(event, setImage2, setCursorStyle2, setIsImageLoaded2)}
           onDragOver={handleDragOver}
           onDragEnter={(event) => handleDragEnter(event, setCursorStyle2)}
@@ -161,7 +201,7 @@ const ImageDropZone = () => {
         >
           {!isImageLoaded2 && (
             <>
-            <span className='file-input-text2'>OUTPUT IMAGE</span>
+              <span className='file-input-text2'>OUTPUT IMAGE</span>
               <input
                 id="fileInput2"
                 type="file"
@@ -175,51 +215,41 @@ const ImageDropZone = () => {
             <img
               src={image2}
               alt=""
-              className="dropped-image"
+              className={`dropped-image ${selectedImage === image2 ? 'glow' : ''}`}
               style={{
                 width: 'auto',
                 height: 'auto',
                 objectFit: 'cover',
                 borderRadius: '5px',
               }}
-            
             />
           )}
-        <button onClick={() => handleDownload(image2)}>Download</button>
         </div>
       </div>
       <div className="horizontal-box">
         <h1 className='recommendedheader'>Recommended Styles:</h1>
-        <div className="section" onClick={()=> handleHorizontalImageClick(require('../assets/0001.jpg'))}>
-          <img src={require('../assets/0001.jpg')} alt="" className="sample-image" />
+        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/0001.jpg'))}>
+          <img src={require('../assets/0001.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/0001.jpg') ? 'glow' : ''}`} />
           <div className="section-label">Style 1</div>
         </div>
-        <div className="section"onClick={()=> handleHorizontalImageClick(require('../assets/0006.jpg'))}>
-          <img src={require('../assets/0006.jpg')} alt="" className="sample-image" />
+        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/0006.jpg'))}>
+          <img src={require('../assets/0006.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/0006.jpg') ? 'glow' : ''}`} />
           <div className="section-label">Style 2</div>
         </div>
-        <div className="section"onClick={()=> handleHorizontalImageClick(require('../assets/0003.jpg'))}>
-          <img src={require('../assets/0003.jpg')} alt="" className="sample-image" />
+        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/0003.jpg'))}>
+          <img src={require('../assets/0003.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/0003.jpg') ? 'glow' : ''}`} />
           <div className="section-label">Style 3</div>
         </div>
-        <div className="section"onClick={()=> handleHorizontalImageClick(require('../assets/0004.jpg'))}>
-        <img src={require('../assets/0004.jpg')} alt="" className="sample-image" />
+        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/0004.jpg'))}>
+          <img src={require('../assets/0004.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/0004.jpg') ? 'glow' : ''}`} />
           <div className="section-label">Style 4</div>
         </div>
-        <div className="section"onClick={()=> handleHorizontalImageClick(require('../assets/0002.jpg'))}>
-        <img src={require('../assets/0002.jpg')} alt="" className="sample-image" />
+        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/0002.jpg'))}>
+          <img src={require('../assets/0002.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/0002.jpg') ? 'glow' : ''}`} />
           <div className="section-label">Style 5</div>
         </div>
       </div>
-      <div>
-      <nav className="navbar">
-      <ul>
-        <li><Link to="/">Image Style Replication</Link></li>
-        <li><Link to="/v">Video Style Replication</Link></li>
-      </ul>
-    </nav>
-      </div>
-   </div>
+    </div>
   );
 };
 

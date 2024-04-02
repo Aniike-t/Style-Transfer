@@ -1,4 +1,3 @@
-// App.js
 import React, { useState, useEffect } from 'react';
 import ImageDropZone from './ImageDropZone';
 import '../App';
@@ -27,9 +26,6 @@ const StyleRepPage = () => {
 
   return (
     <div className="app-container">
-      <header>
-        <h1>Image Style Replication</h1>
-      </header>
 
       <div className="columns">
         <div className="column">
