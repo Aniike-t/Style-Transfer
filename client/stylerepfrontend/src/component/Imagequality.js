@@ -117,7 +117,7 @@ const Imagequality = () => {
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/i' onClick={toggleSidebar} className='link-style'>
-          <p>Image Quality Enhancer</p>
+          <p>Image Upscaling</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/c' onClick={toggleSidebar} className='link-style'>
@@ -129,7 +129,7 @@ const Imagequality = () => {
         <Hamburger toggled={sidebarOpen} toggle={setSidebarOpen} size={35} rounded />
       </div>
       <header className='Imageheader' onClick={refreshPage}>
-        <h1>Image Quality Enhancer</h1>
+        <h1>Image Upscaling</h1>
       </header>
       <div className="column">
         {/* First ImageDropZone */}

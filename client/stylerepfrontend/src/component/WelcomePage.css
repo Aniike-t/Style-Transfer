@@ -1,0 +1,40 @@
+/* WelcomePage.css */
+.welcome-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #000;
+    transition: opacity 0.5s ease;
+  }
+  
+  .loading .animation-text {
+    opacity: 0;
+  }
+  
+  .animation-text {
+    font-size: 36px;
+    color: #fff;
+    font-weight: bold;
+  }
+  
+  .animation-text span {
+    opacity: 0;
+    animation: animateText 2s infinite;
+  }
+  
+  @keyframes animateText {
+    0% {
+      opacity: 0;
+      transform: translateY(-50px);
+    }
+    50% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(50px);
+    }
+  }
+  

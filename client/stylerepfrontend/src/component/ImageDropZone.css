@@ -138,10 +138,7 @@ button:hover{
   background-color: rgba(255, 236, 236, 0.762);
   transition: all 1s;
 }
-.sample-image{
-  transition: all 1s;
-  cursor: pointer;
-}
+
 .sample-image:hover{
   scale: calc(1.1);
   transition: all 1s;
@@ -222,7 +219,7 @@ p:hover{
   padding:7px;
   border-radius: 8px;
   color:rgba(9, 9, 9, 0.91);
-  scale: calc(1);
+  scale: calc(1.1);
   transition: all 0.5s;
 }
 

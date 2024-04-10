@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './VideoDropZone.css';
 import dragDropLogo from '../component/dragdropicon.png';
 import { Link } from 'react-router-dom';
@@ -16,7 +16,9 @@ const VideoDropZone = () => {
   const [video1, setVideo1] = useState(null);
   const [video2, setVideo2] = useState(null);
   const [selectedSampleVideo, setSelectedSampleVideo] = useState(null);
-  const [videoLoadingProgress, setVideoLoadingProgress] = useState(0);
+  const [videoLoadingProgress1, setVideoLoadingProgress1] = useState(0);
+  const [videoLoadingProgress2, setVideoLoadingProgress2] = useState(0);
+  const [sampleVideoLoadingProgress, setSampleVideoLoadingProgress] = useState({});
 
   const videoRef1 = useRef(null);
   const videoRef2 = useRef(null);
@@ -25,7 +27,7 @@ const VideoDropZone = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
-  const handleDrop = (event, setVideo, setCursorStyle, setIsVideoLoaded) => {
+  const handleDrop = (event, setVideo, setCursorStyle, setIsVideoLoaded, setVideoLoadingProgress) => {
     event.preventDefault();
     setIsDragging(false);
     setCursorStyle('default');
@@ -79,7 +81,7 @@ const VideoDropZone = () => {
     }
   };
 
-  const handleFileInput = (event, setVideo, setCursorStyle, setIsVideoLoaded) => {
+  const handleFileInput = (event, setVideo, setCursorStyle, setIsVideoLoaded, setVideoLoadingProgress) => {
     const droppedVideo = event.target.files[0];
 
     if (droppedVideo) {
@@ -129,6 +131,49 @@ const VideoDropZone = () => {
     setSelectedSampleVideo(videoUrl);
   };
 
+  const handleSampleVideoDrop = (event, videoUrl) => {
+    event.preventDefault();
+    const sampleVideoLoadingProgressCopy = { ...sampleVideoLoadingProgress };
+    sampleVideoLoadingProgressCopy[videoUrl] = 0;
+    setSampleVideoLoadingProgress(sampleVideoLoadingProgressCopy);
+
+    const droppedVideo = event.dataTransfer.files[0];
+
+    if (droppedVideo) {
+      if (validVideoFormats.includes(droppedVideo.type)) {
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+          setVideo2(e.target.result);
+          setIsVideoLoaded2(true);
+        };
+
+        reader.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const progress = (event.loaded / event.total) * 100;
+            const sampleVideoLoadingProgressCopy = { ...sampleVideoLoadingProgress };
+            sampleVideoLoadingProgressCopy[videoUrl] = progress;
+            setSampleVideoLoadingProgress(sampleVideoLoadingProgressCopy);
+          }
+        };
+
+        reader.readAsDataURL(droppedVideo);
+      } else {
+        alert('Invalid video format. Please choose an MP4 or MOV video.');
+      }
+    }
+  };
+
+  useEffect(() => {
+    // Autoplay sample videos and output video when the component mounts or when the page is refreshed
+    if (videoRef1.current) {
+      videoRef1.current.play();
+    }
+    if (videoRef2.current) {
+      videoRef2.current.play();
+    }
+  }, []);
+
   return (
     <div className={`content-container1 ${sidebarOpen ? 'sidebar-open' : ''}`}>
       <button className='button1' onClick={handleDownload}>Download</button>
@@ -147,7 +192,7 @@ const VideoDropZone = () => {
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/i' onClick={toggleSidebar} className='link-style'>
-          <p>Image Quality Enhancer</p>
+          <p>Image Upscaling</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/c' onClick={toggleSidebar} className='link-style'>
@@ -165,7 +210,7 @@ const VideoDropZone = () => {
         {/* First VideoDropZone */}
         <div
           className={`video-drop-zone ${isDragging ? 'drag-over' : ''}`}
-          onDrop={(event) => handleDrop(event, setVideo1, setCursorStyle1, setIsVideoLoaded1)}
+          onDrop={(event) => handleDrop(event, setVideo1, setCursorStyle1, setIsVideoLoaded1, setVideoLoadingProgress1)}
           onDragOver={handleDragOver}
           onDragEnter={(event) => handleDragEnter(event, setCursorStyle1, videoRef1)}
           onDragLeave={(event) => handleDragLeave(event, setCursorStyle1, videoRef1)}
@@ -190,7 +235,7 @@ const VideoDropZone = () => {
                 id="videoInput1"
                 type="file"
                 accept="video/*, .MOV, .mp4"
-                onChange={(event) => handleFileInput(event, setVideo1, setCursorStyle1, setIsVideoLoaded1)}
+                onChange={(event) => handleFileInput(event, setVideo1, setCursorStyle1, setIsVideoLoaded1, setVideoLoadingProgress1)}
                 style={{ display: 'none' }}
               />
             </>
@@ -210,11 +255,14 @@ const VideoDropZone = () => {
               }}
             />
           )}
+          {isVideoLoaded1 && (
+            <div className="progress-bar" style={{ width: `${videoLoadingProgress1}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
+          )}
         </div>
         {/* Second ImageDropZone */}
         <div
           className={`video-drop-zone ${isDragging ? 'drag-over' : ''}`}
-          onDrop={(event) => handleDrop(event, setVideo2, setCursorStyle2, setIsVideoLoaded2)}
+          onDrop={(event) => handleSampleVideoDrop(event, require('../assets/video9.mp4'))}
           onDragOver={handleDragOver}
           onDragEnter={(event) => handleDragEnter(event, setCursorStyle2, videoRef2)}
           onDragLeave={(event) => handleDragLeave(event, setCursorStyle2, videoRef2)}
@@ -233,11 +281,11 @@ const VideoDropZone = () => {
                 id="fileInput2"
                 type="file"
                 accept="video/*, .mp4, .MOV"
-                onChange={(event) => handleFileInput(event, setVideo2, setCursorStyle2, setIsVideoLoaded2)}
+                onChange={(event) => handleFileInput(event, setVideo2, setCursorStyle2, setIsVideoLoaded2, setVideoLoadingProgress2)}
                 style={{ display: 'none' }}
               />
               {/* Progress Bar */}
-              <div className="progress-bar" style={{ width: `${videoLoadingProgress}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
+              <div className="progress-bar" style={{ width: `${videoLoadingProgress2}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
             </>
           )}
           {isVideoLoaded2 && (
@@ -255,30 +303,48 @@ const VideoDropZone = () => {
               }}
             />
           )}
+          {isVideoLoaded2 && (
+            <div className="progress-bar" style={{ width: `${videoLoadingProgress2}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
+          )}
         </div>
       </div>
 
       <div className="horizontal-box1">
         <h1 className='recommendedheader1'>Recommended Styles:</h1>
-        <div className="section1" onClick={() => handleSampleVideoClick(require('../assets/video1.mp4'))}>
-          <video src={require('../assets/video1.mp4')} alt="" className={`sample-video ${selectedSampleVideo === require('../assets/video1.mp4') ? 'selected' : ''}`} autoPlay controls={false} />
+        <div className="section1" onClick={() => handleSampleVideoClick(require('../assets/video9.mp4'))}>
+          <video src={require('../assets/video9.mp4')} alt="" className={`sample-video ${selectedSampleVideo === require('../assets/video9.mp4') ? 'selected' : ''}`} autoPlay controls={false} />
           <div className="section-label1">Style 1</div>
+          {sampleVideoLoadingProgress[require('../assets/video9.mp4')] && (
+            <div className="progress-bar" style={{ width: `${sampleVideoLoadingProgress[require('../assets/video9.mp4')]}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
+          )}
         </div>
         <div className="section1" onClick={() => handleSampleVideoClick(require('../assets/video2.mp4'))}>
           <video src={require('../assets/video2.mp4')} alt="" className={`sample-video ${selectedSampleVideo === require('../assets/video2.mp4') ? 'selected' : ''}`} autoPlay controls={false} />
           <div className="section-label1">Style 2</div>
+          {sampleVideoLoadingProgress[require('../assets/video2.mp4')] && (
+            <div className="progress-bar" style={{ width: `${sampleVideoLoadingProgress[require('../assets/video2.mp4')]}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
+          )}
         </div>
         <div className="section1" onClick={() => handleSampleVideoClick(require('../assets/video3.mp4'))}>
           <video src={require('../assets/video3.mp4')} alt="" className={`sample-video ${selectedSampleVideo === require('../assets/video3.mp4') ? 'selected' : ''}`} autoPlay controls={false} />
           <div className="section-label1">Style 3</div>
+          {sampleVideoLoadingProgress[require('../assets/video3.mp4')] && (
+            <div className="progress-bar" style={{ width: `${sampleVideoLoadingProgress[require('../assets/video3.mp4')]}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
+          )}
         </div>
         <div className="section1" onClick={() => handleSampleVideoClick(require('../assets/video4.mp4'))}>
           <video src={require('../assets/video4.mp4')} alt="" className={`sample-video ${selectedSampleVideo === require('../assets/video4.mp4') ? 'selected' : ''}`} autoPlay controls={false} />
           <div className="section-label1">Style 4</div>
+          {sampleVideoLoadingProgress[require('../assets/video4.mp4')] && (
+            <div className="progress-bar" style={{ width: `${sampleVideoLoadingProgress[require('../assets/video4.mp4')]}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
+          )}
         </div>
         <div className="section1" onClick={() => handleSampleVideoClick(require('../assets/video5.mp4'))}>
           <video src={require('../assets/video5.mp4')} alt="" className={`sample-video ${selectedSampleVideo === require('../assets/video5.mp4') ? 'selected' : ''}`} autoPlay controls={false} />
           <div className="section-label1">Style 5</div>
+          {sampleVideoLoadingProgress[require('../assets/video5.mp4')] && (
+            <div className="progress-bar" style={{ width: `${sampleVideoLoadingProgress[require('../assets/video5.mp4')]}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
+          )}
         </div>
       </div>
     </div>

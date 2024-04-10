@@ -9,7 +9,7 @@ body {
   justify-items: center;
   align-items: center;
   overflow-y: scroll;
-  overflow-x: hidden;
+  overflow-x: scroll;
 }
 .dropped-video {
   border-radius: 5px;
@@ -204,7 +204,6 @@ p:hover {
 }
 .icon-bar1 {
   margin-top: 38%;
-  width: 230px;
   height: 2.0px;
   border-radius: 0px 40px 40px 0px;
   background-color: rgba(255, 236, 236, 0.958);
@@ -255,4 +254,21 @@ p:hover {
 
 .progress-bar {
   transition: width 0.5s ease-in-out;
+}
+
+body::-webkit-scrollbar {
+  width: 0;
+}
+
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5); /* You can adjust this color and transparency */
 }

@@ -109,23 +109,23 @@ const ImageDropZone = () => {
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className='icon-bar1'></div>
         <Link to='/' onClick={toggleSidebar} className='link-style'>
-          <p>Image Style Replication</p>
+          <p >Image Style Replication</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/v' onClick={toggleSidebar} className='link-style'>
-          <p>Video Style Replication</p>
+          <p >Video Style Replication</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/s' onClick={toggleSidebar} className='link-style'>
-          <p>Sky Replacement</p>
+          <p >Sky Replacement</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/i' onClick={toggleSidebar} className='link-style'>
-          <p>Image Quality Enhancer</p>
+          <p >Image Upscaling</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/c' onClick={toggleSidebar} className='link-style'>
-          <p>Cartoon Image Replication</p>
+          <p >Cartoon Image Replication</p>
         </Link>
         <div className='icon-bar1'></div>
       </div>
