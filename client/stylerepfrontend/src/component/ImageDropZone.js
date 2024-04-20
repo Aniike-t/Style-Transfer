@@ -3,7 +3,9 @@ import '../component/ImageDropZone.css';
 import dragDropLogo from '../component/dragdropicon.png';
 import { Link } from 'react-router-dom';
 import Hamburger from 'hamburger-react';
+import axios from 'axios';
 const validImageFormats = ['image/jpeg', 'image/png', 'image/heic', 'image/webp'];
+
 
 const ImageDropZone = () => {
   const [isDragging, setIsDragging] = useState(false);
@@ -62,7 +64,7 @@ const ImageDropZone = () => {
 
   const handleFileInput = (event, setImage, setCursorStyle, setIsImageLoaded) => {
     const droppedImage = event.target.files[0];
-
+    setSelectedFile(event.target.files[0]);
     if (droppedImage) {
       if (validImageFormats.includes(droppedImage.type)) {
         const reader = new FileReader();
@@ -97,6 +99,29 @@ const ImageDropZone = () => {
     setSelectedImage(imageUrl);
     setImage2(imageUrl);
     setIsImageLoaded2(true);
+  };
+
+
+  const [selectedFile, setSelectedFile] = useState(null);
+
+
+
+  const handleUpload = async () => {
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const response = await axios.post('http://127.0.0.1:5000/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      console.log(response.data);
+      // Handle success
+    } catch (error) {
+      console.error('Error uploading image: ', error);
+      // Handle error
+    }
   };
 
   const refreshPage = () => {
@@ -168,7 +193,9 @@ const ImageDropZone = () => {
                 style={{ display: 'none' }}
               />
             </>
+          
           )}
+
           {isImageLoaded1 && (
             <img
               src={image1}
@@ -183,7 +210,7 @@ const ImageDropZone = () => {
             />
           )}
         </div>
-
+        <button  className='uploadbtn' onClick={handleUpload}>Upload</button>
         {/* Second ImageDropZone */}
         <div
           className={`image-drop-zone ${isDragging ? 'drag-over' : ''}`}

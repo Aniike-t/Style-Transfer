@@ -203,7 +203,9 @@ button:hover{
 .sidebar-open{
   width:calc(100% - 200px);
 }
-
+.uploadbtn{
+  margin-top: 20%;
+}
 p{
   color:white;
   font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
