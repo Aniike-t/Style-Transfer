@@ -103,7 +103,7 @@ const ImageDropZone = () => {
 
 
   const [selectedFile, setSelectedFile] = useState(null);
-
+  const [stylizedImage, setStylizedImage] = useState(null);
 
 
   const handleUpload = async () => {
@@ -111,15 +111,22 @@ const ImageDropZone = () => {
     formData.append('file', selectedFile);
 
     try {
-      const response = await axios.post('http://127.0.0.1:5000/upload', formData, {
+      // Upload the image to the Flask backend
+      const uploadResponse = await axios.post('http://127.0.0.1:5000/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-      console.log(response.data);
-      // Handle success
+      console.log(uploadResponse.data); // Log the response from the upload endpoint
+
+      // If the upload was successful, set the stylized image
+      if (uploadResponse.status === 200) {
+        // Decode the base64 encoded image data
+        const imageData = uploadResponse.data;
+        setStylizedImage(imageData);
+      }
     } catch (error) {
-      console.error('Error uploading image: ', error);
+      console.error('Error uploading image:', error);
       // Handle error
     }
   };
@@ -229,6 +236,7 @@ const ImageDropZone = () => {
           {!isImageLoaded2 && (
             <>
               <span className='file-input-text2'>OUTPUT IMAGE</span>
+              <img src={`data:image/jpeg;base64,${stylizedImage}`} alt="Stylized Image" style={{ width: '50%', height: 'auto' }}/>
               <input
                 id="fileInput2"
                 type="file"

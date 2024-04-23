@@ -1,16 +1,12 @@
-from flask import Flask, request
+from flask import Flask, request, send_file
 from flask_cors import CORS
 import os
-# from imgstylerepl import stylereplicationimage
 import cv2
 import tensorflow as tf
-import numpy as np
-import matplotlib.pyplot as plt
 import tensorflow_hub as hub
-
-
-
-
+import numpy as np
+import io
+import base64
 
 app = Flask(__name__)
 CORS(app)
@@ -23,7 +19,8 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-
+# Load the TensorFlow Hub model only once
+hub_model = hub.load('https://www.kaggle.com/models/google/arbitrary-image-stylization-v1/frameworks/TensorFlow1/variations/256/versions/2')
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -32,15 +29,18 @@ def upload_file():
     file = request.files['file']
     if file.filename == '':
         return 'No selected file', 400
+    
     # Save the file to the upload folder
-
     file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
     img_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
     print(img_path)
     style_path = "styles/styleimage1.png"
-    # stylerep(img_path, style_path)
-
-    return 'File uploaded successfully', 200
+    
+    # Call the stylereplicationimage function
+    stylized_image_data = stylereplicationimage(img_path, 'styles/styleimage1.png')
+    
+    # Return the encoded image data
+    return stylized_image_data, 200
 
 
 def stylereplicationimage(input_path, style_path):
@@ -64,31 +64,19 @@ def stylereplicationimage(input_path, style_path):
     style_image = load_img(style_path)
 
     print("here 1")
-    #loading model style transfer v2
-    # hub_model = hub.load('https://www.kaggle.com/models/google/arbitrary-image-stylization-v1/frameworks/TensorFlow1/variations/256/versions/2')
-    model_path = "models/2"
-    hub_model = tf.keras.models.load_model(model_path)
 
-    # content_image = load_img("Programs/test/skyline2.jpg")
-    # style_image = load_img("Programs/test/Vincent Van Gogh - The Starry Night.jpg")
-    
-    #create folder if it doesn't exist
-    output_folder = "imagestylerep_op_folder"
-    os.makedirs(output_folder, exist_ok=True)
-    print("here 2")
+    # Use the loaded TensorFlow Hub model
     stylized_images = hub_model(tf.constant(content_image), tf.constant(style_image))
     stylized_image = tf.squeeze(stylized_images[0], axis=0) 
 
     print("here 3")
     stylized_image_np = tf.cast(stylized_image * 255, tf.uint8).numpy()
-    encoded_image = cv2.cvtColor(stylized_image_np, cv2.COLOR_RGB2BGR)  
+    encoded_image = cv2.imencode('.jpg', cv2.cvtColor(stylized_image_np, cv2.COLOR_RGB2BGR))[1].tobytes()
     
-    # cv2.imwrite('stylized_image.jpg', encoded_image)
+    # Encode the image data to base64
+    encoded_image_base64 = base64.b64encode(encoded_image).decode('utf-8')
     
-    cv2.imwrite(os.path.join(output_folder, f"stylized_frame.jpg"), encoded_image)
-
-stylereplicationimage('uploads/0001.jpg','styles/styleimage1.png')
-
+    return encoded_image_base64
 
 if __name__ == '__main__':
     app.run(debug=True)
