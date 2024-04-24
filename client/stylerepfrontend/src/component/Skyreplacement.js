@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import '../component/Skyreplacement.css';
+import '../component/ImageDropZone.css';
 import dragDropLogo from '../component/dragdropicon.png';
 import { Link } from 'react-router-dom';
 import Hamburger from 'hamburger-react';
+import axios from 'axios';
 const validImageFormats = ['image/jpeg', 'image/png', 'image/heic', 'image/webp'];
 
-const Skyreplacement = () => {
+
+const ImageDropZone = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [image1, setImage1] = useState(null);
   const [image2, setImage2] = useState(null);
@@ -62,7 +64,7 @@ const Skyreplacement = () => {
 
   const handleFileInput = (event, setImage, setCursorStyle, setIsImageLoaded) => {
     const droppedImage = event.target.files[0];
-
+    setSelectedFile(event.target.files[0]);
     if (droppedImage) {
       if (validImageFormats.includes(droppedImage.type)) {
         const reader = new FileReader();
@@ -99,6 +101,37 @@ const Skyreplacement = () => {
     setIsImageLoaded2(true);
   };
 
+
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [stylizedImage, setStylizedImage] = useState(null);
+
+
+  const handleUpload = async () => {
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      // Upload the image to the Flask backend
+      const uploadResponse = await axios.post('http://127.0.0.1:5000/uploadforskyreplacement', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      console.log(uploadResponse.data); // Log the response from the upload endpoint
+
+      // If the upload was successful, set the stylized image
+      if (uploadResponse.status === 200) {
+        // Decode the base64 encoded image data
+        const imageData = uploadResponse.data;
+        console.log("this is image data"+imageData);
+        setStylizedImage(imageData);
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      // Handle error
+    }
+  };
+
   const refreshPage = () => {
     window.location.reload();
   };
@@ -109,23 +142,23 @@ const Skyreplacement = () => {
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className='icon-bar1'></div>
         <Link to='/' onClick={toggleSidebar} className='link-style'>
-          <p>Image Style Replication</p>
+          <p >Image Style Replication</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/v' onClick={toggleSidebar} className='link-style'>
-          <p>Video Style Replication</p>
+          <p >Video Style Replication</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/s' onClick={toggleSidebar} className='link-style'>
-          <p>Sky Replacement</p>
+          <p >Sky Replacement</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/i' onClick={toggleSidebar} className='link-style'>
-          <p>Image Upscaling</p>
+          <p >Image Upscaling</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/c' onClick={toggleSidebar} className='link-style'>
-          <p>Cartoon Image Replication</p>
+          <p >Cartoon Image Replication</p>
         </Link>
         <div className='icon-bar1'></div>
       </div>
@@ -133,7 +166,7 @@ const Skyreplacement = () => {
         <Hamburger toggled={sidebarOpen} toggle={setSidebarOpen} size={35} rounded />
       </div>
       <header onClick={refreshPage}>
-        <h1>Sky Replacement</h1>
+        <h1>Sky Style Transfer</h1>
       </header>
       <div className="column">
         {/* First ImageDropZone */}
@@ -168,7 +201,9 @@ const Skyreplacement = () => {
                 style={{ display: 'none' }}
               />
             </>
+          
           )}
+
           {isImageLoaded1 && (
             <img
               src={image1}
@@ -183,7 +218,7 @@ const Skyreplacement = () => {
             />
           )}
         </div>
-
+        <button  className='uploadbtn' onClick={handleUpload}>Upload</button>
         {/* Second ImageDropZone */}
         <div
           className={`image-drop-zone ${isDragging ? 'drag-over' : ''}`}
@@ -202,6 +237,7 @@ const Skyreplacement = () => {
           {!isImageLoaded2 && (
             <>
               <span className='file-input-text2'>OUTPUT IMAGE</span>
+              <img src={`data:image/jpeg;base64,${stylizedImage}`} alt="Stylized Image" style={{ width: '50%', height: 'auto' }}/>
               <input
                 id="fileInput2"
                 type="file"
@@ -253,4 +289,4 @@ const Skyreplacement = () => {
   );
 };
 
-export default Skyreplacement;
+export default ImageDropZone;

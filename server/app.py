@@ -7,6 +7,7 @@ import tensorflow_hub as hub
 import numpy as np
 import io
 import base64
+from scipy import spatial
 
 app = Flask(__name__)
 CORS(app)
@@ -37,13 +38,13 @@ def upload_file():
     style_path = "styles/styleimage1.png"
     
     # Call the stylereplicationimage function
-    stylized_image_data = stylereplicationimage(img_path, 'styles/styleimage1.png')
+    stylized_image_data = stylereplicationimage(img_path, 'styles/styleimage1.png', 1)
     
     # Return the encoded image data
     return stylized_image_data, 200
 
 
-def stylereplicationimage(input_path, style_path):
+def stylereplicationimage(input_path, style_path, mode):
     def load_img(path_to_img):
         max_dim = 2048
         img = tf.io.read_file(path_to_img)
@@ -72,11 +73,294 @@ def stylereplicationimage(input_path, style_path):
     print("here 3")
     stylized_image_np = tf.cast(stylized_image * 255, tf.uint8).numpy()
     encoded_image = cv2.imencode('.jpg', cv2.cvtColor(stylized_image_np, cv2.COLOR_RGB2BGR))[1].tobytes()
-    
+    if mode == 1:
     # Encode the image data to base64
-    encoded_image_base64 = base64.b64encode(encoded_image).decode('utf-8')
+        encoded_image_base64 = base64.b64encode(encoded_image).decode('utf-8')
+        return encoded_image_base64
     
-    return encoded_image_base64
+    elif mode == 2:
+        print('here 4')
+        cv2.imwrite(os.path.join('uploads/skystylerepupload/tempimg',"stylized_img_for_sky.png"),stylized_image_np)
+        print('here 5')
+
+
+
+
+
+
+
+
+def make_mask(b, image):
+    mask = np.zeros((image.shape[0], image.shape[1], 1), dtype=np.uint8)
+    for xx, yy in enumerate(b):
+        mask[yy:, xx] = 255
+
+    return mask
+
+def display_mask(b, image, color=[0, 0, 255]):
+    result = image.copy()
+    overlay = np.full(image.shape, color, image.dtype)
+    
+    overlay = cv2.addWeighted(
+        cv2.bitwise_and(overlay, overlay, mask=make_mask(b, image)),
+        1,
+        image,
+        1,
+        0,
+        result
+    )
+    cv2.imwrite(os.path.join('uploads/skystylerepupload/tempimg',"result.png"), overlay)
+    res_path = os.path.join('uploads/skystylerepupload/tempimg',"result.png")
+    denoiseplusbw(res_path)
+
+def color_to_gradient(image):
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    return np.hypot(
+        cv2.Sobel(gray, cv2.CV_64F, 1, 0),
+        cv2.Sobel(gray, cv2.CV_64F, 0, 1)
+    )
+
+def energy(b_tmp, image):
+    sky_mask = make_mask(b_tmp, image)
+
+    ground = np.ma.array(
+        image,
+        mask=cv2.cvtColor(cv2.bitwise_not(sky_mask), cv2.COLOR_GRAY2BGR)
+    ).compressed()
+    sky = np.ma.array(
+        image,
+        mask=cv2.cvtColor(sky_mask, cv2.COLOR_GRAY2BGR)
+    ).compressed()
+    ground.shape = (ground.size//3, 3)
+    sky.shape = (sky.size//3, 3)
+
+    sigma_g, mu_g = cv2.calcCovarMatrix(
+        ground,
+        None,
+        cv2.COVAR_NORMAL | cv2.COVAR_ROWS | cv2.COVAR_SCALE
+    )
+    sigma_s, mu_s = cv2.calcCovarMatrix(
+        sky,
+        None,
+        cv2.COVAR_NORMAL | cv2.COVAR_ROWS | cv2.COVAR_SCALE
+    )
+
+    y = 2
+
+    return 1 / (
+        (y * np.linalg.det(sigma_s) + np.linalg.det(sigma_g)) +
+        (y * np.linalg.det(np.linalg.eig(sigma_s)[1]) +
+            np.linalg.det(np.linalg.eig(sigma_g)[1]))
+    )
+
+def calculate_border(grad, t):
+    sky = np.full(grad.shape[1], grad.shape[0])
+
+    for x in range(grad.shape[1]):
+        border_pos = np.argmax(grad[:, x] > t)
+
+        # argmax hax return 0 if nothing is > t
+        if border_pos > 0:
+            sky[x] = border_pos
+
+    return sky
+
+def calculate_border_optimal(image, thresh_min=5, thresh_max=600, search_step=5):
+    grad = color_to_gradient(image)
+
+    n = ((thresh_max - thresh_min) // search_step) + 1
+
+    b_opt = None
+    jn_max = 0
+
+    for k in range(1, n + 1):
+        t = thresh_min + ((thresh_max - thresh_min) // n - 1) * (k - 1)
+
+        b_tmp = calculate_border(grad, t)
+        jn = energy(b_tmp, image)
+
+        if jn > jn_max:
+            jn_max = jn
+            b_opt = b_tmp
+
+    return b_opt
+
+def no_sky_region(bopt, thresh1, thresh2, thresh3):
+    border_ave = np.average(bopt)
+    asadsbp = np.average(np.absolute(np.diff(bopt)))
+
+    return border_ave < thresh1 or (border_ave < thresh2 and asadsbp > thresh3)
+
+def partial_sky_region(bopt, thresh4):
+    return np.any(np.diff(bopt) > thresh4)
+
+def refine_sky(bopt, image):
+    sky_mask = make_mask(bopt, image)
+
+    ground = np.ma.array(
+        image,
+        mask=cv2.cvtColor(cv2.bitwise_not(sky_mask), cv2.COLOR_GRAY2BGR)
+    ).compressed()
+    sky = np.ma.array(
+        image,
+        mask=cv2.cvtColor(sky_mask, cv2.COLOR_GRAY2BGR)
+    ).compressed()
+    ground.shape = (ground.size//3, 3)
+    sky.shape = (sky.size//3, 3)
+
+    ret, label, center = cv2.kmeans(
+        np.float32(sky),
+        2,
+        None,
+        (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0),
+        10,
+        cv2.KMEANS_RANDOM_CENTERS
+    )
+
+    sigma_s1, mu_s1 = cv2.calcCovarMatrix(
+        sky[label.ravel() == 0],
+        None,
+        cv2.COVAR_NORMAL | cv2.COVAR_ROWS | cv2.COVAR_SCALE
+    )
+    ic_s1 = cv2.invert(sigma_s1, cv2.DECOMP_SVD)[1]
+
+    sigma_s2, mu_s2 = cv2.calcCovarMatrix(
+        sky[label.ravel() == 1],
+        None,
+        cv2.COVAR_NORMAL | cv2.COVAR_ROWS | cv2.COVAR_SCALE
+    )
+    ic_s2 = cv2.invert(sigma_s2, cv2.DECOMP_SVD)[1]
+
+    sigma_g, mu_g = cv2.calcCovarMatrix(
+        ground,
+        None,
+        cv2.COVAR_NORMAL | cv2.COVAR_ROWS | cv2.COVAR_SCALE
+    )
+    icg = cv2.invert(sigma_g, cv2.DECOMP_SVD)[1]
+
+    if cv2.Mahalanobis(mu_s1, mu_g, ic_s1) > cv2.Mahalanobis(mu_s2, mu_g, ic_s2):
+        mu_s = mu_s1
+        sigma_s = sigma_s1
+        ics = ic_s1
+    else:
+        mu_s = mu_s2
+        sigma_s = sigma_s2
+        ics = ic_s2
+
+    for x in range(image.shape[1]):
+        cnt = np.sum(np.less(
+            spatial.distance.cdist(
+                image[0:bopt[x], x],
+                mu_s,
+                'mahalanobis',
+                VI=ics
+            ),
+            spatial.distance.cdist(
+                image[0:bopt[x], x],
+                mu_g,
+                'mahalanobis',
+                VI=icg
+            )
+        ))
+
+        if cnt < (bopt[x] / 2):
+            bopt[x] = 0
+
+    return bopt
+
+def detect_sky(input_image):
+    image = cv2.imread(input_image)
+    bopt = calculate_border_optimal(image)
+    if no_sky_region(bopt, image.shape[0]/30, image.shape[0]/4, 5):
+        return
+    
+    display_mask(bopt, image)
+    if partial_sky_region(bopt, image.shape[1]/3):
+        bnew = refine_sky(bopt, image)
+        display_mask(bnew, image)
+
+@app.route('/uploadforskyreplacement', methods=['POST'])
+def sky_replacement():
+    if 'file' not in request.files:
+        return 'No file part', 400
+    file = request.files['file']
+    if file.filename == '':
+        return 'No selected file', 400
+    
+    # Save the file to the upload folder
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+    img_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+    og_img = img_path
+    print(img_path)
+    
+    style_path = "styles/styleimage1.png"
+    detect_sky(img_path)
+    
+    mask_img = os.path.join('uploads/skystylerepupload/tempimg', "denoised.png")
+    
+    denoiseplusbw(og_img)
+    # Invert the color profile of og_img from RGB to BGR
+    inverted_img = cv2.imread(og_img)
+    inverted_img = cv2.cvtColor(inverted_img, cv2.COLOR_RGB2BGR)
+    cv2.imwrite(os.path.join('uploads/skystylerepupload/tempimg', "inverted_img.png"), inverted_img)
+    
+    stylereplicationimage('uploads/skystylerepupload/tempimg/inverted_img.png', style_path, 2)
+    stylized_sky = os.path.join('uploads/skystylerepupload/tempimg', "stylized_img_for_sky.png")
+    encoded_image_data = mask_transfer('uploads/skystylerepupload/tempimg/inverted_img.png', stylized_sky, mask_img)
+    encoded_image_data_base64 = base64.b64encode(encoded_image_data).decode('utf-8')
+    print(encoded_image_data_base64)
+    
+    # Delete the temporary files
+    os.remove(os.path.join('uploads/skystylerepupload/tempimg', "denoised.png"))
+    os.remove(os.path.join('uploads/skystylerepupload/tempimg', "inverted_img.png"))
+    os.remove(os.path.join('uploads/skystylerepupload/tempimg', "result.png"))
+    os.remove(os.path.join('uploads/skystylerepupload/tempimg', "stylized_img_for_sky.png"))
+    os.remove(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+    
+    return encoded_image_data_base64
+
+def mask_transfer(og_img, stylized_image, mask_img):
+    og_img = cv2.imread(og_img)
+    stylized_image = cv2.imread(stylized_image, cv2.IMREAD_COLOR)
+    mask_img = cv2.imread(mask_img, cv2.IMREAD_GRAYSCALE)
+
+    height, width = og_img.shape[:2]
+    stylized_image_resized = cv2.resize(stylized_image, (width, height))
+    mask_img_resized = cv2.resize(mask_img, (width, height))
+
+    _, mask_binary = cv2.threshold(mask_img_resized, 127, 255, cv2.THRESH_BINARY)
+    mask_inv = cv2.bitwise_not(mask_binary)
+    result = og_img.copy()
+    result[mask_binary == 0] = stylized_image_resized[mask_binary == 0]
+
+    # Encode the result as JPEG image data
+    _, encoded_image_data = cv2.imencode('.jpg', cv2.cvtColor(result, cv2.COLOR_RGB2BGR))
+
+    return encoded_image_data.tobytes()
+
+def denoiseplusbw(img_path):
+    img_path = None
+    def blue_shade_to_white(img):
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        
+        lower_blue = np.array([90, 50, 50])
+        upper_blue = np.array([130, 255, 255])
+        
+        mask = cv2.inRange(hsv, lower_blue, upper_blue)
+        mask = cv2.bitwise_not(mask)
+        
+        return mask
+
+    image = cv2.imread(os.path.join('uploads/skystylerepupload/tempimg',"result.png"))
+    mask = blue_shade_to_white(image)
+    denoised_mask = cv2.fastNlMeansDenoising(mask, None, 10, 7, 21)
+    cv2.imwrite(os.path.join('uploads/skystylerepupload/tempimg',"denoised.png"), denoised_mask)
+
+        
+
+        
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
