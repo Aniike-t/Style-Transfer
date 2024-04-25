@@ -18,6 +18,10 @@ const ImageDropZone = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
 
+  const [styleSelected, setStyleSelected] = useState(null);
+
+
+
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
@@ -95,10 +99,11 @@ const ImageDropZone = () => {
     }
   };
 
-  const handleHorizontalImageClick = (imageUrl) => {
+  const handleHorizontalImageClick = (imageUrl, styleNumber) => {
     setSelectedImage(imageUrl);
-    setImage2(imageUrl);
+    //setImage2(imageUrl);
     setIsImageLoaded2(true);
+    setStyleSelected(styleNumber);
   };
 
 
@@ -109,7 +114,8 @@ const ImageDropZone = () => {
   const handleUpload = async () => {
     const formData = new FormData();
     formData.append('file', selectedFile);
-
+    formData.append('styleNumber', styleSelected); // Append the style number to the FormData
+  
     try {
       // Upload the image to the Flask backend
       const uploadResponse = await axios.post('http://127.0.0.1:5000/upload', formData, {
@@ -118,7 +124,7 @@ const ImageDropZone = () => {
         }
       });
       console.log(uploadResponse.data); // Log the response from the upload endpoint
-
+  
       // If the upload was successful, set the stylized image
       if (uploadResponse.status === 200) {
         // Decode the base64 encoded image data
@@ -248,7 +254,7 @@ const ImageDropZone = () => {
           )}
           {isImageLoaded2 && (
             <img
-              src={image2}
+              src={`data:image/jpeg;base64,${stylizedImage}`}
               alt=""
               className={`dropped-image ${selectedImage === image2 ? 'glow' : ''}`}
               style={{
@@ -263,24 +269,24 @@ const ImageDropZone = () => {
       </div>
       <div className="horizontal-box">
         <h1 className='recommendedheader'>Recommended Styles:</h1>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/0001.jpg'))}>
-          <img src={require('../assets/0001.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/0001.jpg') ? 'glow' : ''}`} />
+        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/001.jpg'), 1)}>
+          <img src={require('../assets/001.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/001.jpg') ? 'glow' : ''}`} />
           <div className="section-label">Style 1</div>
         </div>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/0006.jpg'))}>
-          <img src={require('../assets/0006.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/0006.jpg') ? 'glow' : ''}`} />
+        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/002.jpg'), 2)}>
+          <img src={require('../assets/002.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/002.jpg') ? 'glow' : ''}`} />
           <div className="section-label">Style 2</div>
         </div>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/0003.jpg'))}>
-          <img src={require('../assets/0003.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/0003.jpg') ? 'glow' : ''}`} />
+        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/003.jpg'), 3)}>
+          <img src={require('../assets/003.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/003.jpg') ? 'glow' : ''}`} />
           <div className="section-label">Style 3</div>
         </div>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/0004.jpg'))}>
-          <img src={require('../assets/0004.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/0004.jpg') ? 'glow' : ''}`} />
+        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/004.jpg'), 4)}>
+          <img src={require('../assets/004.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/004.jpg') ? 'glow' : ''}`} />
           <div className="section-label">Style 4</div>
         </div>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/0002.jpg'))}>
-          <img src={require('../assets/0002.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/0002.jpg') ? 'glow' : ''}`} />
+        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/005.jpg'), 5)}>
+          <img src={require('../assets/005.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/005.jpg') ? 'glow' : ''}`} />
           <div className="section-label">Style 5</div>
         </div>
       </div>

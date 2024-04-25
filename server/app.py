@@ -21,7 +21,8 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Load the TensorFlow Hub model only once
-hub_model = hub.load('https://www.kaggle.com/models/google/arbitrary-image-stylization-v1/frameworks/TensorFlow1/variations/256/versions/2')
+hub_model = hub.load('https://kaggle.com/models/google/arbitrary-image-stylization-v1/TensorFlow1/256/2')
+
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -35,18 +36,19 @@ def upload_file():
     file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
     img_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
     print(img_path)
-    style_path = "styles/styleimage1.png"
     
-    # Call the stylereplicationimage function
-    stylized_image_data = stylereplicationimage(img_path, 'styles/styleimage1.png', 1)
+    # Get the style number from the request
+    style_number = int(request.form.get('styleNumber')) if 'styleNumber' in request.form else 1
     
-    # Return the encoded image data
+    # Determine the style image path based on the style number
+    style_image_path = f"styles/styleimage{style_number}.png"
+    
+    stylized_image_data = stylereplicationimage(img_path, style_image_path, 1, 1024)
     return stylized_image_data, 200
 
-
-def stylereplicationimage(input_path, style_path, mode):
-    def load_img(path_to_img):
-        max_dim = 2048
+def stylereplicationimage(input_path, style_path, mode, dims):
+    def load_img(path_to_img, dims):
+        max_dim = dims
         img = tf.io.read_file(path_to_img)
         img = tf.image.decode_image(img, channels=3)
         img = tf.image.convert_image_dtype(img, tf.float32)
@@ -61,8 +63,8 @@ def stylereplicationimage(input_path, style_path, mode):
         img = img[tf.newaxis, :]
         return img
 
-    content_image = load_img(input_path)
-    style_image = load_img(style_path)
+    content_image = load_img(input_path, dims)
+    style_image = load_img(style_path, dims)
 
     print("here 1")
 
@@ -74,8 +76,10 @@ def stylereplicationimage(input_path, style_path, mode):
     stylized_image_np = tf.cast(stylized_image * 255, tf.uint8).numpy()
     encoded_image = cv2.imencode('.jpg', cv2.cvtColor(stylized_image_np, cv2.COLOR_RGB2BGR))[1].tobytes()
     if mode == 1:
+        print('here 7')
     # Encode the image data to base64
         encoded_image_base64 = base64.b64encode(encoded_image).decode('utf-8')
+        print(encoded_image_base64)
         return encoded_image_base64
     
     elif mode == 2:
@@ -293,7 +297,9 @@ def sky_replacement():
     og_img = img_path
     print(img_path)
     
-    style_path = "styles/styleimage1.png"
+    style_number = int(request.form.get('styleNumber')) if 'styleNumber' in request.form else 1
+    
+    style_path = f"styles/styleimage{style_number}.png"  # Determine the style image path based on the style number
     detect_sky(img_path)
     
     mask_img = os.path.join('uploads/skystylerepupload/tempimg', "denoised.png")
@@ -304,7 +310,7 @@ def sky_replacement():
     inverted_img = cv2.cvtColor(inverted_img, cv2.COLOR_RGB2BGR)
     cv2.imwrite(os.path.join('uploads/skystylerepupload/tempimg', "inverted_img.png"), inverted_img)
     
-    stylereplicationimage('uploads/skystylerepupload/tempimg/inverted_img.png', style_path, 2)
+    stylereplicationimage('uploads/skystylerepupload/tempimg/inverted_img.png', style_path, style_number, 1024)
     stylized_sky = os.path.join('uploads/skystylerepupload/tempimg', "stylized_img_for_sky.png")
     encoded_image_data = mask_transfer('uploads/skystylerepupload/tempimg/inverted_img.png', stylized_sky, mask_img)
     encoded_image_data_base64 = base64.b64encode(encoded_image_data).decode('utf-8')

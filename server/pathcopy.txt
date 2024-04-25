@@ -4,3 +4,6 @@ server/uploads/skystylerepupload/tempimg/denoised.png
 server/uploads/skystylerepupload/tempimg/inverted_img.png
 server/uploads/skystylerepupload/tempimg/result.png
 server/uploads/skystylerepupload/tempimg/stylized_img_for_sky.png
+
+
+
