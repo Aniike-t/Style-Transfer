@@ -7,7 +7,7 @@ import axios from 'axios';
 const validImageFormats = ['image/jpeg', 'image/png', 'image/heic', 'image/webp'];
 
 
-const ImageDropZone = () => {
+const SkyReplacment = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [image1, setImage1] = useState(null);
   const [image2, setImage2] = useState(null);
@@ -293,4 +293,4 @@ const ImageDropZone = () => {
   );
 };
 
-export default ImageDropZone;
+export default SkyReplacment;

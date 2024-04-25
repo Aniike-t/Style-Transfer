@@ -8,16 +8,19 @@ const validImageFormats = ['image/jpeg', 'image/png', 'image/heic', 'image/webp'
 
 
 const ImageDropZone = () => {
+  
   const [isDragging, setIsDragging] = useState(false);
   const [image1, setImage1] = useState(null);
   const [image2, setImage2] = useState(null);
+
   const [cursorStyle1, setCursorStyle1] = useState('pointer');
   const [cursorStyle2, setCursorStyle2] = useState('pointer');
+
   const [isImageLoaded1, setIsImageLoaded1] = useState(false);
   const [isImageLoaded2, setIsImageLoaded2] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
 
+  const [selectedImage, setSelectedImage] = useState(null);
   const [styleSelected, setStyleSelected] = useState(null);
 
 

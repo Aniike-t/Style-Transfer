@@ -1,58 +1,50 @@
-import React, { useState, useRef, useEffect } from 'react';
-import './VideoDropZone.css';
+import React, { useState } from 'react';
+import '../component/ImageDropZone.css';
 import dragDropLogo from '../component/dragdropicon.png';
 import { Link } from 'react-router-dom';
 import Hamburger from 'hamburger-react';
+import axios from 'axios';
+const validImageFormats = ['image/jpeg', 'image/png', 'image/heic', 'image/webp'];
 
-const validVideoFormats = ['video/mp4', 'video/MOV'];
 
-const VideoDropZone = () => {
+const ImageDropZone = () => {
   const [isDragging, setIsDragging] = useState(false);
+  const [image1, setImage1] = useState(null);
+  const [image2, setImage2] = useState(null);
   const [cursorStyle1, setCursorStyle1] = useState('pointer');
   const [cursorStyle2, setCursorStyle2] = useState('pointer');
-  const [isVideoLoaded1, setIsVideoLoaded1] = useState(false);
-  const [isVideoLoaded2, setIsVideoLoaded2] = useState(false);
+  const [isImageLoaded1, setIsImageLoaded1] = useState(false);
+  const [isImageLoaded2, setIsImageLoaded2] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [video1, setVideo1] = useState(null);
-  const [video2, setVideo2] = useState(null);
-  const [selectedSampleVideo, setSelectedSampleVideo] = useState(null);
-  const [videoLoadingProgress1, setVideoLoadingProgress1] = useState(0);
-  const [videoLoadingProgress2, setVideoLoadingProgress2] = useState(0);
-  const [sampleVideoLoadingProgress, setSampleVideoLoadingProgress] = useState({});
+  const [selectedImage, setSelectedImage] = useState(null);
 
-  const videoRef1 = useRef(null);
-  const videoRef2 = useRef(null);
+  const [styleSelected, setStyleSelected] = useState(null);
+
+
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
-  const handleDrop = (event, setVideo, setCursorStyle, setIsVideoLoaded, setVideoLoadingProgress) => {
+  const handleDrop = (event, setImage, setCursorStyle, setIsImageLoaded) => {
     event.preventDefault();
     setIsDragging(false);
     setCursorStyle('default');
 
     if (event.dataTransfer.files.length > 0) {
-      const droppedVideo = event.dataTransfer.files[0];
+      const droppedImage = event.dataTransfer.files[0];
 
-      if (validVideoFormats.includes(droppedVideo.type)) {
+      if (validImageFormats.includes(droppedImage.type)) {
         const reader = new FileReader();
 
         reader.onload = (e) => {
-          setVideo(e.target.result);
-          setIsVideoLoaded(true);
+          setImage(e.target.result);
+          setIsImageLoaded(true);
         };
 
-        reader.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const progress = (event.loaded / event.total) * 100;
-            setVideoLoadingProgress(progress);
-          }
-        };
-
-        reader.readAsDataURL(droppedVideo);
+        reader.readAsDataURL(droppedImage);
       } else {
-        alert('Invalid video format. Please choose an MP4 or MOV video.');
+        alert('Invalid image format. Please choose a JPEG, PNG, HEIC, or WEBP image.');
       }
     }
   };
@@ -62,62 +54,86 @@ const VideoDropZone = () => {
     setIsDragging(true);
   };
 
-  const handleDragEnter = (event, setCursorStyle, videoRef) => {
+  const handleDragEnter = (event, setCursorStyle) => {
     event.preventDefault();
     setIsDragging(true);
     setCursorStyle('pointer');
-    if (videoRef.current) {
-      videoRef.current.play();
-    }
   };
 
-  const handleDragLeave = (event, setCursorStyle, videoRef) => {
+  const handleDragLeave = (event, setCursorStyle) => {
     event.preventDefault();
     setIsDragging(false);
     setCursorStyle('pointer');
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
   };
 
-  const handleFileInput = (event, setVideo, setCursorStyle, setIsVideoLoaded, setVideoLoadingProgress) => {
-    const droppedVideo = event.target.files[0];
-
-    if (droppedVideo) {
-      if (validVideoFormats.includes(droppedVideo.type)) {
+  const handleFileInput = (event, setImage, setCursorStyle, setIsImageLoaded) => {
+    const droppedImage = event.target.files[0];
+    setSelectedFile(event.target.files[0]);
+    if (droppedImage) {
+      if (validImageFormats.includes(droppedImage.type)) {
         const reader = new FileReader();
 
         reader.onload = (e) => {
-          setVideo(e.target.result);
-          setIsVideoLoaded(true);
+          setImage(e.target.result);
+          setIsImageLoaded(true);
         };
 
-        reader.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const progress = (event.loaded / event.total) * 100;
-            setVideoLoadingProgress(progress);
-          }
-        };
-
-        reader.readAsDataURL(droppedVideo);
+        reader.readAsDataURL(droppedImage);
         setCursorStyle('default');
       } else {
-        alert('Invalid video format. Please choose an MP4 or MOV video.');
+        alert('Invalid image format. Please choose a JPEG, PNG, HEIC, or WEBP image.');
       }
     }
   };
 
-  const handleDownload = () => {
-    if (video2) {
+  const handleDownload = (image) => {
+    if (image) {
       const link = document.createElement('a');
-      link.href = video2;
-      link.download = 'video';
+      link.href = image;
+      link.download = 'image';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } else {
-      alert('No video to download.');
+      alert('No image to download.');
+    }
+  };
+
+  const handleHorizontalImageClick = (imageUrl, styleNumber) => {
+    setSelectedImage(imageUrl);
+    //setImage2(imageUrl);
+    setIsImageLoaded2(true);
+    setStyleSelected(styleNumber);
+  };
+
+
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [stylizedImage, setStylizedImage] = useState(null);
+
+
+  const handleUpload = async () => {
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('styleNumber', styleSelected); // Append the style number to the FormData
+  
+    try {
+      // Upload the image to the Flask backend
+      const uploadResponse = await axios.post('http://127.0.0.1:5000/uploadvideoforstylerep', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      console.log(uploadResponse.data); // Log the response from the upload endpoint
+  
+      // If the upload was successful, set the stylized image
+      if (uploadResponse.status === 200) {
+        // Decode the base64 encoded image data
+        const imageData = uploadResponse.data;
+        setStylizedImage(imageData);
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      // Handle error
     }
   };
 
@@ -125,95 +141,46 @@ const VideoDropZone = () => {
     window.location.reload();
   };
 
-  const handleSampleVideoClick = (videoUrl) => {
-    setVideo2(videoUrl);
-    setIsVideoLoaded2(true);
-    setSelectedSampleVideo(videoUrl);
-  };
-
-  const handleSampleVideoDrop = (event, videoUrl) => {
-    event.preventDefault();
-    const sampleVideoLoadingProgressCopy = { ...sampleVideoLoadingProgress };
-    sampleVideoLoadingProgressCopy[videoUrl] = 0;
-    setSampleVideoLoadingProgress(sampleVideoLoadingProgressCopy);
-
-    const droppedVideo = event.dataTransfer.files[0];
-
-    if (droppedVideo) {
-      if (validVideoFormats.includes(droppedVideo.type)) {
-        const reader = new FileReader();
-
-        reader.onload = (e) => {
-          setVideo2(e.target.result);
-          setIsVideoLoaded2(true);
-        };
-
-        reader.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const progress = (event.loaded / event.total) * 100;
-            const sampleVideoLoadingProgressCopy = { ...sampleVideoLoadingProgress };
-            sampleVideoLoadingProgressCopy[videoUrl] = progress;
-            setSampleVideoLoadingProgress(sampleVideoLoadingProgressCopy);
-          }
-        };
-
-        reader.readAsDataURL(droppedVideo);
-      } else {
-        alert('Invalid video format. Please choose an MP4 or MOV video.');
-      }
-    }
-  };
-
-  useEffect(() => {
-    // Autoplay sample videos and output video when the component mounts or when the page is refreshed
-    if (videoRef1.current) {
-      videoRef1.current.play();
-    }
-    if (videoRef2.current) {
-      videoRef2.current.play();
-    }
-  }, []);
-
   return (
-    <div className={`content-container1 ${sidebarOpen ? 'sidebar-open' : ''}`}>
-      <button className='button1' onClick={handleDownload}>Download</button>
+    <div className={`content-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
+      <button onClick={() => handleDownload(image2)}>Download</button>
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className='icon-bar1'></div>
         <Link to='/' onClick={toggleSidebar} className='link-style'>
-          <p>Image Style Replication</p>
+          <p >Image Style Replication</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/v' onClick={toggleSidebar} className='link-style'>
-          <p>Video Style Replication</p>
+          <p >Video Style Replication</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/s' onClick={toggleSidebar} className='link-style'>
-          <p>Sky Replacement</p>
+          <p >Sky Replacement</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/i' onClick={toggleSidebar} className='link-style'>
-          <p>Image Upscaling</p>
+          <p >Image Upscaling</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/c' onClick={toggleSidebar} className='link-style'>
-          <p>Cartoon Image Replication</p>
+          <p >Cartoon Image Replication</p>
         </Link>
         <div className='icon-bar1'></div>
       </div>
       <div className="menu-bar-icon" onClick={toggleSidebar}>
         <Hamburger toggled={sidebarOpen} toggle={setSidebarOpen} size={35} rounded />
       </div>
-      <header className='header1' onClick={refreshPage}>
+      <header onClick={refreshPage}>
         <h1>Video Style Replication</h1>
       </header>
-      <div className="column1">
-        {/* First VideoDropZone */}
+      <div className="column">
+        {/* First ImageDropZone */}
         <div
-          className={`video-drop-zone ${isDragging ? 'drag-over' : ''}`}
-          onDrop={(event) => handleDrop(event, setVideo1, setCursorStyle1, setIsVideoLoaded1, setVideoLoadingProgress1)}
+          className={`image-drop-zone ${isDragging ? 'drag-over' : ''}`}
+          onDrop={(event) => handleDrop(event, setImage1, setCursorStyle1, setIsImageLoaded1)}
           onDragOver={handleDragOver}
-          onDragEnter={(event) => handleDragEnter(event, setCursorStyle1, videoRef1)}
-          onDragLeave={(event) => handleDragLeave(event, setCursorStyle1, videoRef1)}
+          onDragEnter={(event) => handleDragEnter(event, setCursorStyle1)}
+          onDragLeave={(event) => handleDragLeave(event, setCursorStyle1)}
           style={{
             cursor: cursorStyle1,
             position: 'relative',
@@ -222,31 +189,31 @@ const VideoDropZone = () => {
             height: '150px',
           }}
         >
-          {!isVideoLoaded1 && (
+          {!isImageLoaded1 && (
             <>
-              <label htmlFor="videoInput1" className="file-input-label1">
+              <label htmlFor="fileInput1" className="file-input-label">
                 <img src={dragDropLogo} alt="" className="drag-drop-logo" />
-                <span className='file-input-video1'>INPUT VIDEO</span>
-                <span className="file-input-video">
-                  Drag & drop a video here or click to open file (Please choose an MP4 or MOV video.)
+                <span className='file-input-text1'>INPUT IMAGE</span>
+                <span className="file-input-text">
+                  Drag & drop an video here or click to open file
                 </span>
               </label>
               <input
-                id="videoInput1"
+                id="fileInput1"
                 type="file"
-                accept="video/*, .MOV, .mp4"
-                onChange={(event) => handleFileInput(event, setVideo1, setCursorStyle1, setIsVideoLoaded1, setVideoLoadingProgress1)}
+                accept="image/*, .png, .jpeg, .heic, .webp"
+                onChange={(event) => handleFileInput(event, setImage1, setCursorStyle1, setIsImageLoaded1)}
                 style={{ display: 'none' }}
               />
             </>
+          
           )}
-          {isVideoLoaded1 && (
-            <video
-              ref={videoRef1}
-              src={video1}
-              autoPlay
-              controls={false}
-              className="dropped-video"
+
+          {isImageLoaded1 && (
+            <img
+              src={image1}
+              alt=""
+              className="dropped-image"
               style={{
                 width: 'auto',
                 height: 'auto',
@@ -255,17 +222,15 @@ const VideoDropZone = () => {
               }}
             />
           )}
-          {isVideoLoaded1 && (
-            <div className="progress-bar" style={{ width: `${videoLoadingProgress1}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
-          )}
         </div>
+        <button  className='uploadbtn' onClick={handleUpload}>Upload</button>
         {/* Second ImageDropZone */}
         <div
-          className={`video-drop-zone ${isDragging ? 'drag-over' : ''}`}
-          onDrop={(event) => handleSampleVideoDrop(event, require('../assets/video9.mp4'))}
+          className={`image-drop-zone ${isDragging ? 'drag-over' : ''}`}
+          onDrop={(event) => handleDrop(event, setImage2, setCursorStyle2, setIsImageLoaded2)}
           onDragOver={handleDragOver}
-          onDragEnter={(event) => handleDragEnter(event, setCursorStyle2, videoRef2)}
-          onDragLeave={(event) => handleDragLeave(event, setCursorStyle2, videoRef2)}
+          onDragEnter={(event) => handleDragEnter(event, setCursorStyle2)}
+          onDragLeave={(event) => handleDragLeave(event, setCursorStyle2)}
           style={{
             cursor: cursorStyle2,
             position: 'relative',
@@ -274,27 +239,24 @@ const VideoDropZone = () => {
             height: '150px',
           }}
         >
-          {!isVideoLoaded2 && (
+          {!isImageLoaded2 && (
             <>
-              <span className='file-input-video2'>OUTPUT VIDEO</span>
+              <span className='file-input-text2'>OUTPUT IMAGE</span>
+              <img src={`data:image/jpeg;base64,${stylizedImage}`} alt="Stylized Image" style={{ width: '50%', height: 'auto' }}/>
               <input
                 id="fileInput2"
                 type="file"
-                accept="video/*, .mp4, .MOV"
-                onChange={(event) => handleFileInput(event, setVideo2, setCursorStyle2, setIsVideoLoaded2, setVideoLoadingProgress2)}
+                accept="image/*, .png, .jpeg, .heic, .webp"
+                onChange={(event) => handleFileInput(event, setImage2, setCursorStyle2, setIsImageLoaded2)}
                 style={{ display: 'none' }}
               />
-              {/* Progress Bar */}
-              <div className="progress-bar" style={{ width: `${videoLoadingProgress2}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
             </>
           )}
-          {isVideoLoaded2 && (
-            <video
-              ref={videoRef2}
-              src={video2}
-              autoPlay
-              controls={false}
-              className={`dropped-video ${selectedSampleVideo === video2 ? 'selected' : ''}`}
+          {isImageLoaded2 && (
+            <img
+              src={`data:image/jpeg;base64,${stylizedImage}`}
+              alt=""
+              className={`dropped-image ${selectedImage === image2 ? 'glow' : ''}`}
               style={{
                 width: 'auto',
                 height: 'auto',
@@ -303,52 +265,33 @@ const VideoDropZone = () => {
               }}
             />
           )}
-          {isVideoLoaded2 && (
-            <div className="progress-bar" style={{ width: `${videoLoadingProgress2}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
-          )}
         </div>
       </div>
-
-      <div className="horizontal-box1">
-        <h1 className='recommendedheader1'>Recommended Styles:</h1>
-        <div className="section1" onClick={() => handleSampleVideoClick(require('../assets/video9.mp4'))}>
-          <video src={require('../assets/video9.mp4')} alt="" className={`sample-video ${selectedSampleVideo === require('../assets/video9.mp4') ? 'selected' : ''}`} autoPlay controls={false} />
-          <div className="section-label1">Style 1</div>
-          {sampleVideoLoadingProgress[require('../assets/video9.mp4')] && (
-            <div className="progress-bar" style={{ width: `${sampleVideoLoadingProgress[require('../assets/video9.mp4')]}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
-          )}
+      <div className="horizontal-box">
+        <h1 className='recommendedheader'>Recommended Styles:</h1>
+        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/001.jpg'), 1)}>
+          <img src={require('../assets/001.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/001.jpg') ? 'glow' : ''}`} />
+          <div className="section-label">Style 1</div>
         </div>
-        <div className="section1" onClick={() => handleSampleVideoClick(require('../assets/video2.mp4'))}>
-          <video src={require('../assets/video2.mp4')} alt="" className={`sample-video ${selectedSampleVideo === require('../assets/video2.mp4') ? 'selected' : ''}`} autoPlay controls={false} />
-          <div className="section-label1">Style 2</div>
-          {sampleVideoLoadingProgress[require('../assets/video2.mp4')] && (
-            <div className="progress-bar" style={{ width: `${sampleVideoLoadingProgress[require('../assets/video2.mp4')]}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
-          )}
+        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/002.jpg'), 2)}>
+          <img src={require('../assets/002.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/002.jpg') ? 'glow' : ''}`} />
+          <div className="section-label">Style 2</div>
         </div>
-        <div className="section1" onClick={() => handleSampleVideoClick(require('../assets/video3.mp4'))}>
-          <video src={require('../assets/video3.mp4')} alt="" className={`sample-video ${selectedSampleVideo === require('../assets/video3.mp4') ? 'selected' : ''}`} autoPlay controls={false} />
-          <div className="section-label1">Style 3</div>
-          {sampleVideoLoadingProgress[require('../assets/video3.mp4')] && (
-            <div className="progress-bar" style={{ width: `${sampleVideoLoadingProgress[require('../assets/video3.mp4')]}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
-          )}
+        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/003.jpg'), 3)}>
+          <img src={require('../assets/003.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/003.jpg') ? 'glow' : ''}`} />
+          <div className="section-label">Style 3</div>
         </div>
-        <div className="section1" onClick={() => handleSampleVideoClick(require('../assets/video4.mp4'))}>
-          <video src={require('../assets/video4.mp4')} alt="" className={`sample-video ${selectedSampleVideo === require('../assets/video4.mp4') ? 'selected' : ''}`} autoPlay controls={false} />
-          <div className="section-label1">Style 4</div>
-          {sampleVideoLoadingProgress[require('../assets/video4.mp4')] && (
-            <div className="progress-bar" style={{ width: `${sampleVideoLoadingProgress[require('../assets/video4.mp4')]}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
-          )}
+        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/004.jpg'), 4)}>
+          <img src={require('../assets/004.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/004.jpg') ? 'glow' : ''}`} />
+          <div className="section-label">Style 4</div>
         </div>
-        <div className="section1" onClick={() => handleSampleVideoClick(require('../assets/video5.mp4'))}>
-          <video src={require('../assets/video5.mp4')} alt="" className={`sample-video ${selectedSampleVideo === require('../assets/video5.mp4') ? 'selected' : ''}`} autoPlay controls={false} />
-          <div className="section-label1">Style 5</div>
-          {sampleVideoLoadingProgress[require('../assets/video5.mp4')] && (
-            <div className="progress-bar" style={{ width: `${sampleVideoLoadingProgress[require('../assets/video5.mp4')]}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
-          )}
+        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/005.jpg'), 5)}>
+          <img src={require('../assets/005.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/005.jpg') ? 'glow' : ''}`} />
+          <div className="section-label">Style 5</div>
         </div>
       </div>
     </div>
   );
 };
 
-export default VideoDropZone;
+export default ImageDropZone;
