@@ -84,11 +84,11 @@ const SkyReplacment = () => {
     }
   };
 
-  const handleDownload = (image) => {
-    if (image) {
+  const handleDownload = (imageData) => {
+    if (imageData) {
       const link = document.createElement('a');
-      link.href = image;
-      link.download = 'image';
+      link.href = `data:image/jpeg;base64,${imageData}`;
+      link.download = 'image.jpg'; // Specify the filename with the appropriate extension
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -142,7 +142,7 @@ const SkyReplacment = () => {
 
   return (
     <div className={`content-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
-      <button onClick={() => handleDownload(image2)}>Download</button>
+      <button onClick={() => handleDownload(stylizedImage)}>Download</button>
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className='icon-bar1'></div>
         <Link to='/' onClick={toggleSidebar} className='link-style'>

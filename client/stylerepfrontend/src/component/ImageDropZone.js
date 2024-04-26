@@ -8,7 +8,7 @@ const validImageFormats = ['image/jpeg', 'image/png', 'image/heic', 'image/webp'
 
 
 const ImageDropZone = () => {
-  
+
   const [isDragging, setIsDragging] = useState(false);
   const [image1, setImage1] = useState(null);
   const [image2, setImage2] = useState(null);
@@ -89,11 +89,11 @@ const ImageDropZone = () => {
     }
   };
 
-  const handleDownload = (image) => {
-    if (image) {
+  const handleDownload = (imageData) => {
+    if (imageData) {
       const link = document.createElement('a');
-      link.href = image;
-      link.download = 'image';
+      link.href = `data:image/jpeg;base64,${imageData}`;
+      link.download = 'image.jpg'; // Specify the filename with the appropriate extension
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -101,6 +101,7 @@ const ImageDropZone = () => {
       alert('No image to download.');
     }
   };
+  
 
   const handleHorizontalImageClick = (imageUrl, styleNumber) => {
     setSelectedImage(imageUrl);
@@ -146,7 +147,7 @@ const ImageDropZone = () => {
 
   return (
     <div className={`content-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
-      <button onClick={() => handleDownload(image2)}>Download</button>
+      <button onClick={() => handleDownload(stylizedImage)}>Download</button>
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className='icon-bar1'></div>
         <Link to='/' onClick={toggleSidebar} className='link-style'>
@@ -245,7 +246,7 @@ const ImageDropZone = () => {
           {!isImageLoaded2 && (
             <>
               <span className='file-input-text2'>OUTPUT IMAGE</span>
-              <img src={`data:image/jpeg;base64,${stylizedImage}`} alt="Stylized Image" style={{ width: '50%', height: 'auto' }}/>
+              <img src={`data:image/jpeg;base64,${stylizedImage}`} alt="" style={{ width: '50%', height: 'auto'}}/>
               <input
                 id="fileInput2"
                 type="file"

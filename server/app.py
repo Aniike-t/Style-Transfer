@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 import os
 import cv2
@@ -24,6 +24,18 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 hub_model = hub.load('https://kaggle.com/models/google/arbitrary-image-stylization-v1/TensorFlow1/256/2')
 
 
+folder_path = "uploads/skystylerepupload/tempimg"
+
+if not os.path.exists(folder_path):
+    try:
+        os.makedirs(folder_path)
+        print("Folder created successfully.")
+    except OSError as e:
+        print(f"Failed to create directory: {e}")
+else:
+    print("Folder already exists.")
+
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
@@ -44,6 +56,10 @@ def upload_file():
     style_image_path = f"styles/styleimage{style_number}.png"
     
     stylized_image_data = stylereplicationimage(img_path, style_image_path, 1, 1024)
+    
+    # remove image after processing
+    os.remove(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+    
     return stylized_image_data, 200
 
 def stylereplicationimage(input_path, style_path, mode, dims):
@@ -310,11 +326,13 @@ def sky_replacement():
     inverted_img = cv2.cvtColor(inverted_img, cv2.COLOR_RGB2BGR)
     cv2.imwrite(os.path.join('uploads/skystylerepupload/tempimg', "inverted_img.png"), inverted_img)
     
-    stylereplicationimage('uploads/skystylerepupload/tempimg/inverted_img.png', style_path, style_number, 1024)
+    height, width = inverted_img.shape[:2]
+    
+    stylereplicationimage('uploads/skystylerepupload/tempimg/inverted_img.png', style_path, 2, 1024)
     stylized_sky = os.path.join('uploads/skystylerepupload/tempimg', "stylized_img_for_sky.png")
-    encoded_image_data = mask_transfer('uploads/skystylerepupload/tempimg/inverted_img.png', stylized_sky, mask_img)
+    encoded_image_data = mask_transfer('uploads/skystylerepupload/tempimg/inverted_img.png', stylized_sky, mask_img, width, height)
     encoded_image_data_base64 = base64.b64encode(encoded_image_data).decode('utf-8')
-    print(encoded_image_data_base64)
+    print("this is the image : "+encoded_image_data_base64)
     
     # Delete the temporary files
     os.remove(os.path.join('uploads/skystylerepupload/tempimg', "denoised.png"))
@@ -325,12 +343,19 @@ def sky_replacement():
     
     return encoded_image_data_base64
 
-def mask_transfer(og_img, stylized_image, mask_img):
+def mask_transfer(og_img, stylized_image, mask_img, width, height):
     og_img = cv2.imread(og_img)
     stylized_image = cv2.imread(stylized_image, cv2.IMREAD_COLOR)
     mask_img = cv2.imread(mask_img, cv2.IMREAD_GRAYSCALE)
 
-    height, width = og_img.shape[:2]
+    if stylized_image is None:
+        print("Error: Stylized image not loaded correctly")
+        print("Stylized image path:", stylized_image)
+        return None
+
+    print("Stylized image shape:", stylized_image.shape)
+
+
     stylized_image_resized = cv2.resize(stylized_image, (width, height))
     mask_img_resized = cv2.resize(mask_img, (width, height))
 
@@ -364,7 +389,104 @@ def denoiseplusbw(img_path):
 
         
 
-        
+@app.route('/uploadvideoforstylerep', methods=['POST'])
+def uploadvideoforstylerep():
+    # Define paths and parameters
+    style_number = int(request.form.get('styleNumber')) if 'styleNumber' in request.form else 1
+    user_defined_fps = 1
+    # Save the uploaded video file
+    if 'file' in request.files:
+        video_file = request.files['file']
+        video_path = os.path.join(app.config['UPLOAD_FOLDER'], 'uploaded_video.mp4')
+        video_file.save(video_path)
+    else:
+        return jsonify({'error': 'No file part in the request'}), 400
+
+    def load_img(path_to_img):
+        max_dim = 512
+        img = tf.io.read_file(path_to_img)
+        img = tf.image.decode_image(img, channels=3)
+        img = tf.image.convert_image_dtype(img, tf.float32)
+
+        shape = tf.cast(tf.shape(img)[:-1], tf.float32)
+        long_dim = max(shape)
+        scale = max_dim / long_dim
+
+        new_shape = tf.cast(shape * scale, tf.int32)
+
+        img = tf.image.resize(img, new_shape)
+        img = img[tf.newaxis, :]
+        return img
+    
+    # Define output folders
+    output_folder = 'output_frames'
+    stylized_output_folder = 'stylized_frames'
+    os.makedirs(output_folder, exist_ok=True)
+    os.makedirs(stylized_output_folder, exist_ok=True)
+
+    # Load style image
+    style_img_path = f'styles/styleimage{style_number}.png'  # Assuming style images are stored in 'styles' folder
+    style_image = load_img(style_img_path)
+
+    # Load TensorFlow Hub model for style transfer
+    # hub_model = hub.load('https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2')
+
+    # Open the video
+    cap = cv2.VideoCapture(video_path)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+
+    # Process video frames
+    frame_count = 0
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        frame_count += 1
+
+        # Stylize every frame
+        cv2.imwrite(os.path.join(output_folder, f"frame_{frame_count}.jpg"), frame)
+        content_image = load_img(os.path.join(output_folder, f"frame_{frame_count}.jpg"))
+
+        # Perform stylization
+        stylized_image = hub_model(tf.constant(content_image), tf.constant(style_image))[0]
+
+        # Convert to numpy array
+        stylized_image = tf.image.convert_image_dtype(stylized_image, tf.uint8)
+        stylized_image_np = tf.image.encode_jpeg(tf.cast(stylized_image[0] * 255, tf.uint8))
+
+        # Save stylized frame
+        with open(os.path.join(stylized_output_folder, f"stylized_frame_{frame_count}.jpg"), 'wb') as f:
+            f.write(stylized_image_np.numpy())
+
+    # Release resources
+    cap.release()
+
+    # Create the final stylized video
+    stylized_images_dir = stylized_output_folder
+    image_files = sorted(
+        [os.path.join(stylized_images_dir, file) for file in os.listdir(stylized_images_dir)],
+        key=lambda x: os.path.getmtime(x)
+    )
+
+    first_image = cv2.imread(image_files[0])
+    height, width, _ = first_image.shape
+
+    output_video_path = "output_stylized_video.mp4"
+    fourcc = cv2.VideoWriter_fourcc(*'h264')  # Use H.264 format
+    output_video = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
+
+    for image_file in image_files:
+        image = cv2.imread(image_file)
+        output_video.write(image)
+
+    output_video.release()
+
+    # Encode the stylized video as base64
+    with open(output_video_path, 'rb') as f:
+        encoded_video = base64.b64encode(f.read()).decode('utf-8')
+
+    # Return the encoded video as response
+    return jsonify({'encoded_video': encoded_video})
 
 
 
