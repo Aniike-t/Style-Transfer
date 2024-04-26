@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import Hamburger from 'hamburger-react';
 import axios from 'axios';
 
+
 const validVideoFormats = ['video/mp4', 'video/webm', 'video/quicktime'];
 
 const VideoStyleReplication = () => {
@@ -81,6 +82,7 @@ const VideoStyleReplication = () => {
   
         if (response.status === 200) {
           const encodedVideo = response.data.encoded_video;
+          console.log("video: "+encodedVideo)
           setOutputVideo(encodedVideo);
         }
       } catch (error) {
@@ -131,65 +133,49 @@ const VideoStyleReplication = () => {
         <h1>Video Style Replication</h1>
       </header>
       <div className="column">
-        {/* VideoDropZone */}
-        <div
-          className={`video-drop-zone ${isDragging ? 'drag-over' : ''}`}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragEnter={handleDragEnter}
-          onDragLeave={handleDragLeave}
-          style={{
-            cursor: cursorStyle,
-            position: 'relative',
-            overflow: 'hidden',
-            width: '320px',
-            height: '150px',
-          }}
-        >
-          
-          {!isVideoLoaded && (
-            <>
-              <label htmlFor="fileInput" className="file-input-label">
-                <img src={dragDropLogo} alt="" className="drag-drop-logo" />
-                <span className='file-input-text'>Drop a video here or click to upload</span>
-              </label>
-              <input
-                id="fileInput"
-                type="file"
-                accept="video/*"
-                onChange={handleFileInput}
-                style={{ display: 'none' }}
-              />
-            </>
-          )}
+  {/* Original Video */}
+  <div style={{ width: '45%', marginRight: '100px',marginLeft: '100px', marginTop:'100px' }}>
+    {!isVideoLoaded && (
+      <>
+        <label htmlFor="fileInput" className="file-input-label">
+          <img src={dragDropLogo} alt="" style={{ maxWidth: '100%', height: 'auto' }} />
+          <span className="file-input-text">Drop a video here or click to upload</span>
+        </label>
+        <input
+          id="fileInput"
+          type="file"
+          accept="video/*"
+          onChange={handleFileInput}
+          style={{ display: 'none' }}
+        />
+      </>
+    )}
 
-          {isVideoLoaded && (
-            <video
-              src={URL.createObjectURL(video)} // Use URL.createObjectURL to display video from File object
-              controls
-              className="dropped-video"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                borderRadius: '5px',
-              }}
-            />
-          )}
-          {outputVideo && (
-          <div className="output-video-container">
-            <video
-              controls
-              src={`data:video/mp4;base64,${outputVideo}`}
-              className="output-video"
-            />
-          </div>
-        )}
-        </div>
-        <button className='uploadbtn' onClick={handleUpload}>Upload</button>
-      </div>
-      <div className="horizontal-box" style={{marginTop: '500px'}}>
-        <h1 className='recommendedheader'>Recommended Styles:</h1>
+    {isVideoLoaded && (
+      <video
+        src={URL.createObjectURL(video)}
+        controls
+        style={{ width: '100%', height: 'auto', borderRadius: '5px' }}
+      />
+    )}
+  </div>
+
+  {/* Stylized Video */}
+  
+    <div style={{ width: '45%', marginLeft: '5%' }}>
+      <video
+        src={`data:video/mp4;base64,${outputVideo}`}
+        controls
+        style={{ width: '100%', height: 'auto', borderRadius: '5px' }}
+      />
+    </div>
+  
+
+  <button className="uploadbtn" onClick={handleUpload}>Upload</button>
+</div>
+      
+      <div className="horizontal-box" style={{marginTop: '100px'}}>
+        <h1 className='recommendedheader' style={{marginTop: '100px'}} >Recommended Styles:</h1>
         <div className="section" onClick={() => handleStyleSelection(1)}>
           <img src={require('../assets/001.jpg')} alt="" className={`sample-image ${selectedStyle === 1 ? 'glow' : ''}`} />
           <div className="section-label">Style 1</div>

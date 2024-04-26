@@ -393,7 +393,7 @@ def denoiseplusbw(img_path):
 def uploadvideoforstylerep():
     # Define paths and parameters
     style_number = int(request.form.get('styleNumber')) if 'styleNumber' in request.form else 1
-    user_defined_fps = 1
+    
     # Save the uploaded video file
     if 'file' in request.files:
         video_file = request.files['file']
@@ -434,7 +434,8 @@ def uploadvideoforstylerep():
     # Open the video
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS)
-
+    
+    user_defined_fps = 1
     # Process video frames
     frame_count = 0
     while cap.isOpened():
@@ -443,20 +444,21 @@ def uploadvideoforstylerep():
             break
         frame_count += 1
 
-        # Stylize every frame
-        cv2.imwrite(os.path.join(output_folder, f"frame_{frame_count}.jpg"), frame)
-        content_image = load_img(os.path.join(output_folder, f"frame_{frame_count}.jpg"))
+        if frame_count % int(fps / user_defined_fps) == 0:
+            # Stylize every frame
+            cv2.imwrite(os.path.join(output_folder, f"frame_{frame_count}.jpg"), frame)
+            content_image = load_img(os.path.join(output_folder, f"frame_{frame_count}.jpg"))
 
-        # Perform stylization
-        stylized_image = hub_model(tf.constant(content_image), tf.constant(style_image))[0]
+            # Perform stylization
+            stylized_image = hub_model(tf.constant(content_image), tf.constant(style_image))[0]
 
-        # Convert to numpy array
-        stylized_image = tf.image.convert_image_dtype(stylized_image, tf.uint8)
-        stylized_image_np = tf.image.encode_jpeg(tf.cast(stylized_image[0] * 255, tf.uint8))
+            # Convert to numpy array
+            stylized_image = tf.image.convert_image_dtype(stylized_image, tf.uint8)
+            stylized_image_np = tf.image.encode_jpeg(tf.cast(stylized_image[0] * 255, tf.uint8))
 
-        # Save stylized frame
-        with open(os.path.join(stylized_output_folder, f"stylized_frame_{frame_count}.jpg"), 'wb') as f:
-            f.write(stylized_image_np.numpy())
+            # Save stylized frame
+            with open(os.path.join(stylized_output_folder, f"stylized_frame_{frame_count}.jpg"), 'wb') as f:
+                f.write(stylized_image_np.numpy())
 
     # Release resources
     cap.release()
@@ -484,7 +486,10 @@ def uploadvideoforstylerep():
     # Encode the stylized video as base64
     with open(output_video_path, 'rb') as f:
         encoded_video = base64.b64encode(f.read()).decode('utf-8')
-
+    os.remove(output_video_path)
+    os.remove(stylized_images_dir)
+    os.remove(output_folder)
+    os.remove(video_path)
     # Return the encoded video as response
     return jsonify({'encoded_video': encoded_video})
 
