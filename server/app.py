@@ -426,7 +426,10 @@ def uploadvideoforstylerep():
 
     # Load style image
     style_img_path = f'styles/styleimage{style_number}.png'  # Assuming style images are stored in 'styles' folder
-    style_image = load_img(style_img_path)
+    style_image=load_img(style_img_path)
+    
+    
+    
 
     # Load TensorFlow Hub model for style transfer
     # hub_model = hub.load('https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2')
