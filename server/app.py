@@ -438,7 +438,7 @@ def uploadvideoforstylerep():
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS)
     
-    user_defined_fps = 1
+    user_defined_fps = 10
     # Process video frames
     frame_count = 0
     while cap.isOpened():
@@ -473,28 +473,120 @@ def uploadvideoforstylerep():
         key=lambda x: os.path.getmtime(x)
     )
 
+
+    # Read the first image to get its dimensions
     first_image = cv2.imread(image_files[0])
     height, width, _ = first_image.shape
 
+    # Define the output video writer
     output_video_path = "output_stylized_video.mp4"
     fourcc = cv2.VideoWriter_fourcc(*'h264')  # Use H.264 format
     output_video = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
 
+    # Write each frame after converting RGB to BGR
     for image_file in image_files:
+        # Read the image
         image = cv2.imread(image_file)
-        output_video.write(image)
 
+        # Convert RGB to BGR
+        bgr_image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+
+        # Write the converted frame to the output video
+        output_video.write(bgr_image)
+
+    # Release the output video writer
     output_video.release()
 
     # Encode the stylized video as base64
     with open(output_video_path, 'rb') as f:
         encoded_video = base64.b64encode(f.read()).decode('utf-8')
+
+    # Remove temporary files
     os.remove(output_video_path)
     os.remove(stylized_images_dir)
     os.remove(output_folder)
     os.remove(video_path)
+
     # Return the encoded video as response
     return jsonify({'encoded_video': encoded_video})
+
+
+
+### Cartoon Style Transfer Code : 
+    # load image
+def li(p):
+    img = cv2.imread(p)
+    img = img.astype(np.float32)/127.5 -1
+    img = np.expand_dims(img,0)
+    img = tf.convert_to_tensor(img)
+    return img
+
+# preprocess image
+def pi(img,td=896):
+    shp = tf.cast(tf.shape(img)[1:-1], tf.float32)
+    sd  = min(shp)
+    scl = td/sd
+    nhp = tf.cast(shp*scl, tf.int32)
+    img = tf.image.resize(img,nhp)
+    img = tf.image.resize_with_crop_or_pad(img, td,td)
+    return img
+
+def cartoon(img_p):
+    # loading image
+    si = li(img_p)
+
+    psi = pi(si, td=512)
+
+    # model dataflow 
+    m = '1.tflite'
+    i = tf.lite.Interpreter(model_path=m)
+    ind = i.get_input_details()
+    i.allocate_tensors()
+    i.set_tensor(ind[0]['index'], psi)
+    i.invoke()
+
+    r = i.tensor(i.get_output_details()[0]['index'])()
+
+    # post process the model output
+    o = (np.squeeze(r) + 1.0) * 127.5
+    o = np.clip(o, 0, 255).astype(np.uint8)
+    o = cv2.cvtColor(o, cv2.COLOR_BGR2RGB)
+
+    o_bgr = cv2.cvtColor(o, cv2.COLOR_RGB2BGR)
+
+    # Encode output image as base64
+    _, buffer = cv2.imencode('.jpg', o_bgr)
+    base64_image = base64.b64encode(buffer).decode('utf-8')
+
+    return base64_image
+
+
+
+
+
+@app.route('/uploadforcartoonstylerep', methods=['POST'])
+def CartoonStyleRep():
+    if 'file' not in request.files:
+        return 'No file part', 400
+    file = request.files['file']
+    if file.filename == '':
+        return 'No selected file', 400
+    
+    # Save the file to the upload folder
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+    img_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+    print(img_path)
+    imgs = [img_path]
+
+    output_images = []
+    for i in imgs:
+        output_image_base64 = cartoon(i)
+        print(output_image_base64)
+        output_images.append(output_image_base64)
+    
+    return jsonify({'output_images': output_images})
+
+### END
 
 
 

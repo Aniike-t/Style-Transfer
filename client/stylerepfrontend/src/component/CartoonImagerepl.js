@@ -1,20 +1,29 @@
 import React, { useState } from 'react';
-import '../component/CartoonImagerepl.css';
+import '../component/ImageDropZone.css';
 import dragDropLogo from '../component/dragdropicon.png';
 import { Link } from 'react-router-dom';
 import Hamburger from 'hamburger-react';
+import axios from 'axios';
 const validImageFormats = ['image/jpeg', 'image/png', 'image/heic', 'image/webp'];
 
-const CartoonImagerepl = () => {
+
+const ImageDropZone = () => {
+
   const [isDragging, setIsDragging] = useState(false);
   const [image1, setImage1] = useState(null);
   const [image2, setImage2] = useState(null);
+
   const [cursorStyle1, setCursorStyle1] = useState('pointer');
   const [cursorStyle2, setCursorStyle2] = useState('pointer');
+
   const [isImageLoaded1, setIsImageLoaded1] = useState(false);
   const [isImageLoaded2, setIsImageLoaded2] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const [selectedImage, setSelectedImage] = useState(null);
+  const [styleSelected, setStyleSelected] = useState(null);
+
+
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -62,7 +71,7 @@ const CartoonImagerepl = () => {
 
   const handleFileInput = (event, setImage, setCursorStyle, setIsImageLoaded) => {
     const droppedImage = event.target.files[0];
-
+    setSelectedFile(event.target.files[0]);
     if (droppedImage) {
       if (validImageFormats.includes(droppedImage.type)) {
         const reader = new FileReader();
@@ -80,11 +89,11 @@ const CartoonImagerepl = () => {
     }
   };
 
-  const handleDownload = (image) => {
-    if (image) {
+  const handleDownload = (imageData) => {
+    if (imageData) {
       const link = document.createElement('a');
-      link.href = image;
-      link.download = 'image';
+      link.href = `data:image/jpeg;base64,${imageData}`;
+      link.download = 'image.jpg'; // Specify the filename with the appropriate extension
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -92,40 +101,73 @@ const CartoonImagerepl = () => {
       alert('No image to download.');
     }
   };
+  
 
-  const handleHorizontalImageClick = (imageUrl) => {
+  const handleHorizontalImageClick = (imageUrl, styleNumber) => {
     setSelectedImage(imageUrl);
-    setImage2(imageUrl);
+    //setImage2(imageUrl);
     setIsImageLoaded2(true);
+    setStyleSelected(styleNumber);
   };
 
+
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [stylizedImage, setStylizedImage] = useState(null);
+
+
+  const handleUpload = async () => {
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    
+    try {
+      // Upload the image to the Flask backend
+      const uploadResponse = await axios.post('http://127.0.0.1:5000/uploadforcartoonstylerep', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      console.log(uploadResponse.data); // Log the response from the upload endpoint
+      
+      // If the upload was successful, set the stylized image
+      if (uploadResponse.status === 200 && uploadResponse.data.output_images && uploadResponse.data.output_images.length > 0) {
+        const imageData = uploadResponse.data.output_images[0]; // Assuming there's only one image in the array
+        setStylizedImage(imageData);
+      } else {
+        console.error('No image data found in the response.');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      // Handle error
+    }
+  };
   const refreshPage = () => {
     window.location.reload();
   };
 
   return (
     <div className={`content-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
-      <button onClick={() => handleDownload(image2)}>Download</button>
+      <button onClick={() => handleDownload(stylizedImage)}>Download</button>
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className='icon-bar1'></div>
         <Link to='/' onClick={toggleSidebar} className='link-style'>
-          <p>Image Style Replication</p>
+          <p >Image Style Replication</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/v' onClick={toggleSidebar} className='link-style'>
-          <p>Video Style Replication</p>
+          <p >Video Style Replication</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/s' onClick={toggleSidebar} className='link-style'>
-          <p>Sky Replacement</p>
+          <p >Sky Replacement</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/i' onClick={toggleSidebar} className='link-style'>
-          <p>Image Upscaling</p>
+          <p >Image Upscaling</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/c' onClick={toggleSidebar} className='link-style'>
-          <p>Cartoon Image Replication</p>
+          <p >Cartoon Image Replication</p>
         </Link>
         <div className='icon-bar1'></div>
       </div>
@@ -133,7 +175,7 @@ const CartoonImagerepl = () => {
         <Hamburger toggled={sidebarOpen} toggle={setSidebarOpen} size={35} rounded />
       </div>
       <header onClick={refreshPage}>
-        <h1>Cartoon Image Replication</h1>
+        <h1>Cartoon Style Replication</h1>
       </header>
       <div className="column">
         {/* First ImageDropZone */}
@@ -168,7 +210,9 @@ const CartoonImagerepl = () => {
                 style={{ display: 'none' }}
               />
             </>
+          
           )}
+
           {isImageLoaded1 && (
             <img
               src={image1}
@@ -183,7 +227,7 @@ const CartoonImagerepl = () => {
             />
           )}
         </div>
-
+        <button  className='uploadbtn' onClick={handleUpload}>Upload</button>
         {/* Second ImageDropZone */}
         <div
           className={`image-drop-zone ${isDragging ? 'drag-over' : ''}`}
@@ -202,6 +246,7 @@ const CartoonImagerepl = () => {
           {!isImageLoaded2 && (
             <>
               <span className='file-input-text2'>OUTPUT IMAGE</span>
+              <img src={`data:image/jpeg;base64,${stylizedImage}`} alt="" style={{ width: '100%', height: 'auto'}}/>
               <input
                 id="fileInput2"
                 type="file"
@@ -213,7 +258,7 @@ const CartoonImagerepl = () => {
           )}
           {isImageLoaded2 && (
             <img
-              src={image2}
+              src={`data:image/jpeg;base64,${stylizedImage}`}
               alt=""
               className={`dropped-image ${selectedImage === image2 ? 'glow' : ''}`}
               style={{
@@ -226,31 +271,9 @@ const CartoonImagerepl = () => {
           )}
         </div>
       </div>
-      <div className="horizontal-box">
-        <h1 className='recommendedheader'>Recommended Styles:</h1>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/0001.jpg'))}>
-          <img src={require('../assets/0001.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/0001.jpg') ? 'glow' : ''}`} />
-          <div className="section-label">Style 1</div>
-        </div>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/0006.jpg'))}>
-          <img src={require('../assets/0006.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/0006.jpg') ? 'glow' : ''}`} />
-          <div className="section-label">Style 2</div>
-        </div>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/0003.jpg'))}>
-          <img src={require('../assets/0003.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/0003.jpg') ? 'glow' : ''}`} />
-          <div className="section-label">Style 3</div>
-        </div>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/0004.jpg'))}>
-          <img src={require('../assets/0004.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/0004.jpg') ? 'glow' : ''}`} />
-          <div className="section-label">Style 4</div>
-        </div>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/0002.jpg'))}>
-          <img src={require('../assets/0002.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/0002.jpg') ? 'glow' : ''}`} />
-          <div className="section-label">Style 5</div>
-        </div>
-      </div>
+     
     </div>
   );
 };
 
-export default CartoonImagerepl;
+export default ImageDropZone;
