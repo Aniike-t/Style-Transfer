@@ -8,6 +8,7 @@ import numpy as np
 import io
 import base64
 from scipy import spatial
+import shutil
 
 app = Flask(__name__)
 CORS(app)
@@ -51,10 +52,10 @@ def upload_file():
     
     # Get the style number from the request
     style_number = int(request.form.get('styleNumber')) if 'styleNumber' in request.form else 1
-    
+    print("stylenumber: "+str(style_number))
     # Determine the style image path based on the style number
     style_image_path = f"styles/styleimage{style_number}.png"
-    
+    print("stylepath: "+style_image_path)
     stylized_image_data = stylereplicationimage(img_path, style_image_path, 1, 1024)
     
     # remove image after processing
@@ -448,8 +449,11 @@ def uploadvideoforstylerep():
         frame_count += 1
 
         if frame_count % int(fps / user_defined_fps) == 0:
-            # Stylize every frame
+            # Save original frame
+
             cv2.imwrite(os.path.join(output_folder, f"frame_{frame_count}.jpg"), frame)
+
+            # Convert frame from RGB to BGR
             content_image = load_img(os.path.join(output_folder, f"frame_{frame_count}.jpg"))
 
             # Perform stylization
@@ -458,14 +462,13 @@ def uploadvideoforstylerep():
             # Convert to numpy array
             stylized_image = tf.image.convert_image_dtype(stylized_image, tf.uint8)
             stylized_image_np = tf.image.encode_jpeg(tf.cast(stylized_image[0] * 255, tf.uint8))
-
+            encoded_image = cv2.cvtColor(stylized_image_np, cv2.COLOR_RGB2BGR)
             # Save stylized frame
-            with open(os.path.join(stylized_output_folder, f"stylized_frame_{frame_count}.jpg"), 'wb') as f:
-                f.write(stylized_image_np.numpy())
+            with open(os.path.join(stylized_outpu7t_folder, f"stylized_frame_{frame_count}.jpg"), 'wb') as f:
+                f.write(encoded_image.numpy())
 
     # Release resources
     cap.release()
-
     # Create the final stylized video
     stylized_images_dir = stylized_output_folder
     image_files = sorted(
@@ -502,9 +505,15 @@ def uploadvideoforstylerep():
         encoded_video = base64.b64encode(f.read()).decode('utf-8')
 
     # Remove temporary files
+    # os.remove(output_video_path)
+    # os.remove(stylized_images_dir)
+    # os.remove(output_folder)
+    # os.remove(video_path)
+    shutil.rmtree(stylized_images_dir)
+    shutil.rmtree(output_folder)
+
+    # Remove individual files
     os.remove(output_video_path)
-    os.remove(stylized_images_dir)
-    os.remove(output_folder)
     os.remove(video_path)
 
     # Return the encoded video as response

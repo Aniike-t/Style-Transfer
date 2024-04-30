@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../component/ImageDropZone.css';
 import dragDropLogo from '../component/dragdropicon.png';
 import { Link } from 'react-router-dom';
@@ -103,9 +103,9 @@ const ImageDropZone = () => {
   };
   
 
-  const handleHorizontalImageClick = (imageUrl, styleNumber) => {
+  const handleHorizontalImageClick = (imageUrl, filename) => {
+    const styleNumber = parseInt(filename.replace('.jpg', ''), 10);
     setSelectedImage(imageUrl);
-    //setImage2(imageUrl);
     setIsImageLoaded2(true);
     setStyleSelected(styleNumber);
   };
@@ -113,6 +113,45 @@ const ImageDropZone = () => {
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [stylizedImage, setStylizedImage] = useState(null);
+  const [shuffledImages, setShuffledImages] = useState([]);
+  // Array of image filenames
+  const imageFilenames = [
+    '001.jpg',
+    '002.jpg',
+    '003.jpg',
+    '004.jpg',
+    '005.jpg',
+    '006.jpg',
+    '007.jpg',
+    '008.jpg',
+    '009.jpg',
+    '010.jpg',
+    '011.jpg',
+    '012.jpg',
+    '013.jpg',
+    '014.jpg',
+    '015.jpg'
+  ];
+
+  // Function to shuffle and select 5 random filenames
+  function getRandomImageFilenames(array, count) {
+    const shuffledArray = array.sort(() => 0.5 - Math.random());
+    return shuffledArray.slice(0, count);
+  }
+  
+  useEffect(() => {
+    // Get 5 random image filenames when component mounts
+    const randomImageFilenames = getRandomImageFilenames(imageFilenames, 5);
+    setShuffledImages(randomImageFilenames);
+  }, []); 
+
+  const renderedImages = shuffledImages.map((filename, index) => (
+    <div className="section" onClick={() => handleHorizontalImageClick(require(`../assets/${filename}`), filename)} key={index}>
+      <img src={require(`../assets/${filename}`)} alt="" className={`sample-image ${selectedImage === require(`../assets/${filename}`) ? 'glow' : ''}`} />
+      <div className="section-label">Style {parseInt(filename.replace('.jpg', ''), 10)}</div>
+    </div>
+  ));
+
 
 
   const handleUpload = async () => {
@@ -144,6 +183,7 @@ const ImageDropZone = () => {
   const refreshPage = () => {
     window.location.reload();
   };
+
 
   return (
     <div className={`content-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
@@ -273,26 +313,7 @@ const ImageDropZone = () => {
       </div>
       <div className="horizontal-box">
         <h1 className='recommendedheader'>Recommended Styles:</h1>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/001.jpg'), 1)}>
-          <img src={require('../assets/001.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/001.jpg') ? 'glow' : ''}`} />
-          <div className="section-label">Style 1</div>
-        </div>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/002.jpg'), 2)}>
-          <img src={require('../assets/002.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/002.jpg') ? 'glow' : ''}`} />
-          <div className="section-label">Style 2</div>
-        </div>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/003.jpg'), 3)}>
-          <img src={require('../assets/003.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/003.jpg') ? 'glow' : ''}`} />
-          <div className="section-label">Style 3</div>
-        </div>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/004.jpg'), 4)}>
-          <img src={require('../assets/004.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/004.jpg') ? 'glow' : ''}`} />
-          <div className="section-label">Style 4</div>
-        </div>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/005.jpg'), 5)}>
-          <img src={require('../assets/005.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/005.jpg') ? 'glow' : ''}`} />
-          <div className="section-label">Style 5</div>
-        </div>
+        {renderedImages}
       </div>
     </div>
   );
