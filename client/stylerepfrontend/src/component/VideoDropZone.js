@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import '../component/ImageDropZone.css';
 import dragDropLogo from '../component/dragdropicon.png';
 import { Link } from 'react-router-dom';
 import Hamburger from 'hamburger-react';
@@ -56,6 +55,7 @@ const VideoStyleReplication = () => {
   };
 
   const handleFileInput = (event) => {
+    event.preventDefault();
     const droppedFile = event.target.files[0];
     if (droppedFile) {
       if (validVideoFormats.includes(droppedFile.type)) {
@@ -68,7 +68,8 @@ const VideoStyleReplication = () => {
     }
   };
 
-  const handleUpload = async () => {
+  const handleUpload = async (event) => {
+    event.preventDefault();
     if (video) {
       const formData = new FormData();
       formData.append('file', video);
@@ -132,47 +133,54 @@ const VideoStyleReplication = () => {
       <header onClick={refreshPage}>
         <h1>Video Style Replication</h1>
       </header>
-      <div className="column">
-  {/* Original Video */}
-  <div style={{ width: '45%', marginRight: '100px',marginLeft: '100px', marginTop:'100px' }}>
-    {!isVideoLoaded && (
-      <>
-        <label htmlFor="fileInput" className="file-input-label">
-          <img src={dragDropLogo} alt="" style={{ maxWidth: '100%', height: 'auto' }} />
-          <span className="file-input-text">Drop a video here or click to upload</span>
-        </label>
-        <input
-          id="fileInput"
-          type="file"
-          accept="video/*"
-          onChange={handleFileInput}
-          style={{ display: 'none' }}
-        />
-      </>
-    )}
 
-    {isVideoLoaded && (
-      <video
-        src={URL.createObjectURL(video)}
-        controls
-        style={{ width: '100%', height: 'auto', borderRadius: '5px' }}
-      />
-    )}
+      
+
+      <div style={{ marginTop: '100px', display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+    <div style={{ width: '45%', height: '300px', overflow: 'hidden' }}>
+      {/* Original Video */}
+      <div style={{ width: '100%', height: '100%' }}>
+        {!isVideoLoaded && (
+          <>
+            <label htmlFor="fileInput" className="file-input-label">
+              <img src={dragDropLogo} alt="" style={{ maxWidth: '100%', height: 'auto' }} />
+              <span className="file-input-text">Drop a video here or click to upload</span>
+            </label>
+            <input
+              id="fileInput"
+              type="file"
+              accept="video/*"
+              onChange={handleFileInput}
+              style={{ display: 'none' }}
+            />
+          </>
+        )}
+        {isVideoLoaded && (
+          <video
+            src={URL.createObjectURL(video)}
+            controls
+            style={{ width: '100%', height: '100%', borderRadius: '5px', objectFit: 'cover' }}
+          />
+        )}
+      </div>
+    </div>
+    <div style={{ width: '45%', height: '300px', overflow: 'hidden' }}>
+      {/* Stylized Video */}
+      <div style={{ width: '100%', height: '100%' }}>
+        <video
+          src={`data:video/mp4;base64,${outputVideo}`}
+          controls
+          style={{ width: '100%', height: '100%', borderRadius: '5px', objectFit: 'cover' }}
+        />
+      </div>
+      <button className="uploadbtn" onClick={handleUpload} style={{ marginTop: '20px' }}>Upload</button>
+    </div>
+    
   </div>
 
-  {/* Stylized Video */}
-  
-    <div style={{ width: '45%', marginLeft: '5%' }}>
-      <video
-        src={`data:video/mp4;base64,${outputVideo}`}
-        controls
-        style={{ width: '100%', height: 'auto', borderRadius: '5px' }}
-      />
-    </div>
-  
 
-  <button className="uploadbtn" onClick={handleUpload}>Upload</button>
-</div>
+
+
       
       <div className="horizontal-box" style={{marginTop: '100px'}}>
         <h1 className='recommendedheader' style={{marginTop: '100px'}} >Recommended Styles:</h1>
