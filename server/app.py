@@ -392,13 +392,20 @@ def denoiseplusbw(img_path):
 
 @app.route('/uploadvideoforstylerep', methods=['POST'])
 def uploadvideoforstylerep():
+    # Define output folders
+    output_folder = 'output_frames'
+    stylized_output_folder = 'stylized_frames'
+    videotempfolder = 'videotempfolder'
+    os.makedirs(output_folder, exist_ok=True)
+    os.makedirs(stylized_output_folder, exist_ok=True)
+    os.makedirs(videotempfolder, exist_ok=True)
     # Define paths and parameters
     style_number = int(request.form.get('styleNumber')) if 'styleNumber' in request.form else 1
     
     # Save the uploaded video file
     if 'file' in request.files:
         video_file = request.files['file']
-        video_path = os.path.join(app.config['UPLOAD_FOLDER'], 'uploaded_video.mp4')
+        video_path = os.path.join(videotempfolder, 'uploaded_video.mp4')
         video_file.save(video_path)
     else:
         return jsonify({'error': 'No file part in the request'}), 400
@@ -419,11 +426,6 @@ def uploadvideoforstylerep():
         img = img[tf.newaxis, :]
         return img
     
-    # Define output folders
-    output_folder = 'output_frames'
-    stylized_output_folder = 'stylized_frames'
-    os.makedirs(output_folder, exist_ok=True)
-    os.makedirs(stylized_output_folder, exist_ok=True)
 
     # Load style image
     style_img_path = f'styles/styleimage{style_number}.png'  # Assuming style images are stored in 'styles' folder
@@ -439,7 +441,7 @@ def uploadvideoforstylerep():
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS)
     
-    user_defined_fps = 10
+    user_defined_fps = 1
     # Process video frames
     frame_count = 0
     while cap.isOpened():
@@ -453,19 +455,27 @@ def uploadvideoforstylerep():
 
             cv2.imwrite(os.path.join(output_folder, f"frame_{frame_count}.jpg"), frame)
 
-            # Convert frame from RGB to BGR
             content_image = load_img(os.path.join(output_folder, f"frame_{frame_count}.jpg"))
 
-            # Perform stylization
-            stylized_image = hub_model(tf.constant(content_image), tf.constant(style_image))[0]
-
-            # Convert to numpy array
-            stylized_image = tf.image.convert_image_dtype(stylized_image, tf.uint8)
-            stylized_image_np = tf.image.encode_jpeg(tf.cast(stylized_image[0] * 255, tf.uint8))
-            encoded_image = cv2.cvtColor(stylized_image_np, cv2.COLOR_RGB2BGR)
+            # stylized_image = hub_model(tf.constant(content_image), tf.constant(style_image))[0]
+            stylized_image = hub_model(tf.constant(content_image), tf.constant(style_image))
+            # stylized_image = tf.image.convert_image_dtype(stylized_image, tf.uint8)
+            # stylized_image_np = tf.image.encode_jpeg(tf.cast(stylized_image[0] * 255, tf.uint8))
+            # encoded_image = cv2.cvtColor(stylized_image_np, cv2.COLOR_RGB2BGR)
             # Save stylized frame
-            with open(os.path.join(stylized_outpu7t_folder, f"stylized_frame_{frame_count}.jpg"), 'wb') as f:
-                f.write(encoded_image.numpy())
+            
+            stylized_image = tf.squeeze(stylized_image[0], axis=0)  # Remove extra dimension
+
+            # Display content and stylized images for debugging
+            # imshow(content_image[0], title='Content Image')
+            # imshow(stylized_image, title='Stylized Image')
+            # Convert to numpy array and save
+            stylized_image_np = tf.cast(stylized_image * 255, tf.uint8).numpy()
+            encoded_image = cv2.cvtColor(stylized_image_np, cv2.COLOR_RGB2BGR)  # C
+            cv2.imwrite(os.path.join(stylized_output_folder, f"stylized_frame_{frame_count}.jpg"), encoded_image)
+            # with open(os.path.join(stylized_output_folder, f"stylized_frame_{frame_count}.jpg"), 'wb') as f:
+
+            #     f.write(stylized_image_np.tobytes())
 
     # Release resources
     cap.release()
@@ -482,9 +492,9 @@ def uploadvideoforstylerep():
     height, width, _ = first_image.shape
 
     # Define the output video writer
-    output_video_path = "output_stylized_video.mp4"
+    output_video_path = "videotempfolder/output_stylized_video.mp4"
     fourcc = cv2.VideoWriter_fourcc(*'h264')  # Use H.264 format
-    output_video = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
+    output_video = cv2.VideoWriter(output_video_path, fourcc, user_defined_fps, (width, height))
 
     # Write each frame after converting RGB to BGR
     for image_file in image_files:
@@ -492,10 +502,10 @@ def uploadvideoforstylerep():
         image = cv2.imread(image_file)
 
         # Convert RGB to BGR
-        bgr_image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        
 
         # Write the converted frame to the output video
-        output_video.write(bgr_image)
+        output_video.write(image)
 
     # Release the output video writer
     output_video.release()
@@ -509,12 +519,13 @@ def uploadvideoforstylerep():
     # os.remove(stylized_images_dir)
     # os.remove(output_folder)
     # os.remove(video_path)
+    
     shutil.rmtree(stylized_images_dir)
     shutil.rmtree(output_folder)
-
+    shutil.rmtree(videotempfolder)
     # Remove individual files
-    os.remove(output_video_path)
-    os.remove(video_path)
+    # os.remove(output_video_path)
+    # os.remove(video_path)
 
     # Return the encoded video as response
     return jsonify({'encoded_video': encoded_video})

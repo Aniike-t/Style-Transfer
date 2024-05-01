@@ -139,6 +139,10 @@ const SkyReplacment = () => {
   const refreshPage = () => {
     window.location.reload();
   };
+  const removeImage = (setImage, setIsImageLoaded) => {
+    setImage(null);
+    setIsImageLoaded(false);
+  };
 
   return (
     <div className={`content-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
@@ -222,7 +226,8 @@ const SkyReplacment = () => {
             />
           )}
         </div>
-        <button  className='uploadbtn' onClick={handleUpload}>Upload</button>
+        <button  className='uploadbtn' style={{ marginLeft: '1px' }} onClick={handleUpload}>Upload</button>
+        <button className='uploadbtn' style={{ marginRight: '1px' }} onClick={() => removeImage(setImage1, setIsImageLoaded1)}>Remove</button>
         {/* Second ImageDropZone */}
         <div
           className={`image-drop-zone ${isDragging ? 'drag-over' : ''}`}
