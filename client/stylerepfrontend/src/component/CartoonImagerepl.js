@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../component/ImageDropZone.css';
+import '../component/CartoonImagerepl.css';
 import dragDropLogo from '../component/dragdropicon.png';
 import { Link } from 'react-router-dom';
 import Hamburger from 'hamburger-react';
@@ -102,7 +102,10 @@ const ImageDropZone = () => {
     }
   };
   
-
+  const removeImage = (setImage, setIsImageLoaded) => {
+    setImage(null);
+    setIsImageLoaded(false);
+  };
   const handleHorizontalImageClick = (imageUrl, styleNumber) => {
     setSelectedImage(imageUrl);
     //setImage2(imageUrl);
@@ -147,27 +150,22 @@ const ImageDropZone = () => {
 
   return (
     <div className={`content-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
-      <button onClick={() => handleDownload(stylizedImage)}>Download</button>
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className='icon-bar1'></div>
         <Link to='/' onClick={toggleSidebar} className='link-style'>
-          <p >Image Style Replication</p>
+          <p>Image Style Transfer</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/v' onClick={toggleSidebar} className='link-style'>
-          <p >Video Style Replication</p>
+          <p >Video Style Transfer</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/s' onClick={toggleSidebar} className='link-style'>
-          <p >Sky Replacement</p>
-        </Link>
-        <div className='icon-bar1'></div>
-        <Link to='/i' onClick={toggleSidebar} className='link-style'>
-          <p >Image Upscaling</p>
+          <p >Sky Style Transfer</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/c' onClick={toggleSidebar} className='link-style'>
-          <p >Cartoon Image Replication</p>
+          <p >Cartoon Style Transfer</p>
         </Link>
         <div className='icon-bar1'></div>
       </div>
@@ -175,7 +173,7 @@ const ImageDropZone = () => {
         <Hamburger toggled={sidebarOpen} toggle={setSidebarOpen} size={35} rounded />
       </div>
       <header onClick={refreshPage}>
-        <h1>Cartoon Style Replication</h1>
+        <h1>Cartoon Style Transfer</h1>
       </header>
       <div className="column">
         {/* First ImageDropZone */}
@@ -227,7 +225,9 @@ const ImageDropZone = () => {
             />
           )}
         </div>
-        <button  className='uploadbtn' onClick={handleUpload}>Upload</button>
+        <button className="uploadbtn" onClick={handleUpload}>Upload</button>
+        <button className='removebtn' onClick={() => removeImage(setImage1, setIsImageLoaded1)}>Remove</button>
+        <button className='downloadbtn' onClick={handleDownload}>Download</button>
         {/* Second ImageDropZone */}
         <div
           className={`image-drop-zone ${isDragging ? 'drag-over' : ''}`}

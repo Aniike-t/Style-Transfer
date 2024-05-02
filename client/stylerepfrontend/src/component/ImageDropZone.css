@@ -5,7 +5,6 @@ span {
 body {
   background-color: rgba(9, 9, 9, 0.91);
   display:flex;
-  height: 100vh;
   justify-content: center;
   justify-items: center;
   align-items: center;

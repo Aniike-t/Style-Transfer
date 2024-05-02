@@ -146,7 +146,6 @@ const SkyReplacment = () => {
 
   return (
     <div className={`content-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
-      <button onClick={() => handleDownload(stylizedImage)}>Download</button>
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className='icon-bar1'></div>
         <Link to='/' onClick={toggleSidebar} className='link-style'>
@@ -162,7 +161,7 @@ const SkyReplacment = () => {
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/c' onClick={toggleSidebar} className='link-style'>
-          <p >Cartoon Image Replication</p>
+          <p >Cartoon Style Transfer</p>
         </Link>
         <div className='icon-bar1'></div>
       </div>
@@ -222,8 +221,9 @@ const SkyReplacment = () => {
             />
           )}
         </div>
-        <button  className='uploadbtn' style={{ marginLeft: '1px' }} onClick={handleUpload}>Upload</button>
-        <button className='uploadbtn' style={{ marginRight: '1px' }} onClick={() => removeImage(setImage1, setIsImageLoaded1)}>Remove</button>
+        <button className="uploadbtn" onClick={handleUpload}>Upload</button>
+        <button className='removebtn' onClick={() => removeImage(setImage1, setIsImageLoaded1)}>Remove</button>
+        <button className='downloadbtn' onClick={handleDownload}>Download</button>
         {/* Second ImageDropZone */}
         <div
           className={`image-drop-zone ${isDragging ? 'drag-over' : ''}`}

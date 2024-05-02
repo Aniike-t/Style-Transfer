@@ -399,9 +399,11 @@ def uploadvideoforstylerep():
     os.makedirs(output_folder, exist_ok=True)
     os.makedirs(stylized_output_folder, exist_ok=True)
     os.makedirs(videotempfolder, exist_ok=True)
+    
     # Define paths and parameters
     style_number = int(request.form.get('styleNumber')) if 'styleNumber' in request.form else 1
-    
+    progress = 0
+
     # Save the uploaded video file
     if 'file' in request.files:
         video_file = request.files['file']
@@ -426,14 +428,10 @@ def uploadvideoforstylerep():
         img = img[tf.newaxis, :]
         return img
     
-
     # Load style image
     style_img_path = f'styles/styleimage{style_number}.png'  # Assuming style images are stored in 'styles' folder
-    style_image=load_img(style_img_path)
+    style_image = load_img(style_img_path)
     
-    
-    
-
     # Load TensorFlow Hub model for style transfer
     # hub_model = hub.load('https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2')
 
@@ -442,6 +440,10 @@ def uploadvideoforstylerep():
     fps = cap.get(cv2.CAP_PROP_FPS)
     
     user_defined_fps = 23
+
+    # Get total number of frames
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
     # Process video frames
     frame_count = 0
     while cap.isOpened():
@@ -451,86 +453,41 @@ def uploadvideoforstylerep():
         frame_count += 1
 
         if frame_count % int(fps / user_defined_fps) == 0:
-            # Save original frame
-
             cv2.imwrite(os.path.join(output_folder, f"frame_{frame_count}.jpg"), frame)
 
             content_image = load_img(os.path.join(output_folder, f"frame_{frame_count}.jpg"))
 
             # stylized_image = hub_model(tf.constant(content_image), tf.constant(style_image))[0]
             stylized_image = hub_model(tf.constant(content_image), tf.constant(style_image))
-            # stylized_image = tf.image.convert_image_dtype(stylized_image, tf.uint8)
-            # stylized_image_np = tf.image.encode_jpeg(tf.cast(stylized_image[0] * 255, tf.uint8))
-            # encoded_image = cv2.cvtColor(stylized_image_np, cv2.COLOR_RGB2BGR)
-            # Save stylized frame
-            
-            stylized_image = tf.squeeze(stylized_image[0], axis=0)  # Remove extra dimension
 
-            # Display content and stylized images for debugging
-            # imshow(content_image[0], title='Content Image')
-            # imshow(stylized_image, title='Stylized Image')
-            # Convert to numpy array and save
+            stylized_image = tf.squeeze(stylized_image[0], axis=0)
+
             stylized_image_np = tf.cast(stylized_image * 255, tf.uint8).numpy()
-            encoded_image = cv2.cvtColor(stylized_image_np, cv2.COLOR_RGB2BGR)  # C
+            encoded_image = cv2.cvtColor(stylized_image_np, cv2.COLOR_RGB2BGR)
             cv2.imwrite(os.path.join(stylized_output_folder, f"stylized_frame_{frame_count}.jpg"), encoded_image)
-            # with open(os.path.join(stylized_output_folder, f"stylized_frame_{frame_count}.jpg"), 'wb') as f:
 
-            #     f.write(stylized_image_np.tobytes())
+            progress = (frame_count / total_frames) * 100
 
     # Release resources
     cap.release()
-    # Create the final stylized video
-    stylized_images_dir = stylized_output_folder
-    image_files = sorted(
-        [os.path.join(stylized_images_dir, file) for file in os.listdir(stylized_images_dir)],
-        key=lambda x: os.path.getmtime(x)
-    )
 
-
-    # Read the first image to get its dimensions
-    first_image = cv2.imread(image_files[0])
-    height, width, _ = first_image.shape
-
-    # Define the output video writer
-    output_video_path = "videotempfolder/output_stylized_video.mp4"
-    fourcc = cv2.VideoWriter_fourcc(*'h264')  # Use H.264 format
-    output_video = cv2.VideoWriter(output_video_path, fourcc, user_defined_fps, (width, height))
-
-    # Write each frame after converting RGB to BGR
-    for image_file in image_files:
-        # Read the image
-        image = cv2.imread(image_file)
-
-        # Convert RGB to BGR
-        
-
-        # Write the converted frame to the output video
-        output_video.write(image)
-
-    # Release the output video writer
-    output_video.release()
+    # Cleanup
+    shutil.rmtree(stylized_images_dir)
+    shutil.rmtree(output_folder)
+    shutil.rmtree(videotempfolder)
 
     # Encode the stylized video as base64
     with open(output_video_path, 'rb') as f:
         encoded_video = base64.b64encode(f.read()).decode('utf-8')
 
-    # Remove temporary files
-    # os.remove(output_video_path)
-    # os.remove(stylized_images_dir)
-    # os.remove(output_folder)
-    # os.remove(video_path)
-    
-    shutil.rmtree(stylized_images_dir)
-    shutil.rmtree(output_folder)
-    shutil.rmtree(videotempfolder)
-    # Remove individual files
-    # os.remove(output_video_path)
-    # os.remove(video_path)
+    return jsonify({'encoded_video': encoded_video, 'progress': progress})
 
-    # Return the encoded video as response
-    return jsonify({'encoded_video': encoded_video})
-
-
+@app.route('/progress')
+def progress():
+    # You can implement logic here to track the progress of the video processing
+    # For simplicity, we'll just return a static progress value
+    progress = 50  # Example: 50% progress
+    return jsonify({'progress': progress})
 
 ### Cartoon Style Transfer Code : 
     # load image
