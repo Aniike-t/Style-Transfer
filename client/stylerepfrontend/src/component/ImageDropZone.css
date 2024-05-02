@@ -204,9 +204,7 @@ button:hover{
   width:calc(100% - 200px);
 }
 .uploadbtn{
-  position: absolute;
-  margin-left:-35%;
-  margin-top: 21.3%;
+  margin-top: 20%;
 }
 p{
   color:white;
@@ -255,31 +253,4 @@ p:hover{
   cursor: pointer;
   z-index: 1001;
   color: rgb(255, 229, 229);
-}
-
-
-/* Target the scrollbar track */
-::-webkit-scrollbar {
-  width: 12px; /* width of the scrollbar */
-}
-
-/* Target the scrollbar thumb */
-::-webkit-scrollbar-thumb {
-  background-color: #FFE5E5; /* color of the scrollbar thumb */
-  border-radius: 6px; /* radius of the scrollbar thumb */
-}
-
-/* Optional: Hover effect for the scrollbar thumb */
-::-webkit-scrollbar-thumb:hover {
-  background-color: #ffc3c3;
-}
-
-/* Optional: Target the scrollbar track when it's in a hovered state */
-::-webkit-scrollbar-track:hover {
-  background-color: #aeffef00;
-}
-
-/* Optional: Target the scrollbar track when it's in a pressed state */
-::-webkit-scrollbar-track:active {
-  background-color: #ffaeae00;
 }

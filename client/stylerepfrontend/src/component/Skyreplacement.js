@@ -150,19 +150,15 @@ const SkyReplacment = () => {
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className='icon-bar1'></div>
         <Link to='/' onClick={toggleSidebar} className='link-style'>
-          <p >Image Style Replication</p>
+          <p >Image Style Transfer</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/v' onClick={toggleSidebar} className='link-style'>
-          <p >Video Style Replication</p>
+          <p >Video Style Transfer</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/s' onClick={toggleSidebar} className='link-style'>
-          <p >Sky Replacement</p>
-        </Link>
-        <div className='icon-bar1'></div>
-        <Link to='/i' onClick={toggleSidebar} className='link-style'>
-          <p >Image Upscaling</p>
+          <p >Sky Style Transfer</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/c' onClick={toggleSidebar} className='link-style'>
@@ -246,7 +242,7 @@ const SkyReplacment = () => {
           {!isImageLoaded2 && (
             <>
               <span className='file-input-text2'>OUTPUT IMAGE</span>
-              <img src={`data:image/jpeg;base64,${stylizedImage}`} alt="Stylized Image" style={{ width: '50%', height: 'auto' }}/>
+              <img src={`data:image/jpeg;base64,${stylizedImage}`} alt="" style={{ width: '50%', height: 'auto'}}/>
               <input
                 id="fileInput2"
                 type="file"

@@ -22,7 +22,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Load the TensorFlow Hub model only once
-hub_model = hub.load('https://kaggle.com/models/google/arbitrary-image-stylization-v1/TensorFlow1/256/2')
+hub_model = hub.load('https://www.kaggle.com/models/google/arbitrary-image-stylization-v1/TensorFlow1/256/2')
 
 
 folder_path = "uploads/skystylerepupload/tempimg"
@@ -441,7 +441,7 @@ def uploadvideoforstylerep():
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS)
     
-    user_defined_fps = 1
+    user_defined_fps = 23
     # Process video frames
     frame_count = 0
     while cap.isOpened():

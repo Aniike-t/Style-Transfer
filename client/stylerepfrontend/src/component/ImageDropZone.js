@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import '../component/ImageDropZone.css';
 import dragDropLogo from '../component/dragdropicon.png';
 import { Link } from 'react-router-dom';
+import '../component/ImageDropZone.css';
 import Hamburger from 'hamburger-react';
 import axios from 'axios';
 const validImageFormats = ['image/jpeg', 'image/png', 'image/heic', 'image/webp'];
@@ -195,23 +195,19 @@ const ImageDropZone = () => {
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className='icon-bar1'></div>
         <Link to='/' onClick={toggleSidebar} className='link-style'>
-          <p >Image Style Replication</p>
+          <p >Image Style Transfer</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/v' onClick={toggleSidebar} className='link-style'>
-          <p >Video Style Replication</p>
+          <p >Video Style Transfer</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/s' onClick={toggleSidebar} className='link-style'>
-          <p >Sky Replacement</p>
-        </Link>
-        <div className='icon-bar1'></div>
-        <Link to='/i' onClick={toggleSidebar} className='link-style'>
-          <p >Image Upscaling</p>
+          <p >Sky Style Transfer</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/c' onClick={toggleSidebar} className='link-style'>
-          <p >Cartoon Image Replication</p>
+          <p >Cartoon Style Transfer</p>
         </Link>
         <div className='icon-bar1'></div>
       </div>
@@ -219,7 +215,7 @@ const ImageDropZone = () => {
         <Hamburger toggled={sidebarOpen} toggle={setSidebarOpen} size={35} rounded />
       </div>
       <header onClick={refreshPage}>
-        <h1>Image Style Replication</h1>
+        <h1>Image Style Transfer</h1>
       </header>
       <div className="column">
         {/* First ImageDropZone */}

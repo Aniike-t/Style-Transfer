@@ -3,7 +3,7 @@ import dragDropLogo from '../component/dragdropicon.png';
 import { Link } from 'react-router-dom';
 import Hamburger from 'hamburger-react';
 import axios from 'axios';
-
+import '../component/VideoDropZone.css';
 
 const validVideoFormats = ['video/mp4', 'video/webm', 'video/quicktime'];
 
@@ -107,19 +107,15 @@ const VideoStyleReplication = () => {
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className='icon-bar1'></div>
         <Link to='/' onClick={toggleSidebar} className='link-style'>
-          <p>Image Style Replication</p>
+          <p>Image Style Transfer</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/v' onClick={toggleSidebar} className='link-style'>
-          <p>Video Style Replication</p>
+          <p>Video Style Transfer</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/s' onClick={toggleSidebar} className='link-style'>
-          <p>Sky Replacement</p>
-        </Link>
-        <div className='icon-bar1'></div>
-        <Link to='/i' onClick={toggleSidebar} className='link-style'>
-          <p>Image Upscaling</p>
+          <p>Sky Style Transfer</p>
         </Link>
         <div className='icon-bar1'></div>
         <Link to='/c' onClick={toggleSidebar} className='link-style'>
@@ -130,8 +126,8 @@ const VideoStyleReplication = () => {
       <div className="menu-bar-icon" onClick={toggleSidebar}>
         <Hamburger toggled={sidebarOpen} toggle={setSidebarOpen} size={35} rounded />
       </div>
-      <header onClick={refreshPage}>
-        <h1>Video Style Replication</h1>
+      <header className='videoheader'onClick={refreshPage}>
+        <h1>Video Style Transfer</h1>
       </header>
 
       
@@ -173,9 +169,9 @@ const VideoStyleReplication = () => {
           style={{ width: '100%', height: '100%', borderRadius: '5px', objectFit: 'cover' }}
         />
       </div>
-      <button className="uploadbtn" onClick={handleUpload} style={{ marginTop: '20px' }}>Upload</button>
+
     </div>
-    
+    <button className="uploadbtn" onClick={handleUpload} >Upload</button>
   </div>
 
 
