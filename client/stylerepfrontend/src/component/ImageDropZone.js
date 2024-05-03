@@ -114,6 +114,8 @@ const ImageDropZone = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [stylizedImage, setStylizedImage] = useState(null);
   const [shuffledImages, setShuffledImages] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+
   // Array of image filenames
   const imageFilenames = [
     '001.jpg',
@@ -158,8 +160,9 @@ const ImageDropZone = () => {
     const formData = new FormData();
     formData.append('file', selectedFile);
     formData.append('styleNumber', styleSelected); // Append the style number to the FormData
-  
+    if(selectedFile  && styleSelected){
     try {
+      setIsUploading(true);
       // Upload the image to the Flask backend
       const uploadResponse = await axios.post('http://127.0.0.1:5000/upload', formData, {
         headers: {
@@ -173,10 +176,13 @@ const ImageDropZone = () => {
         // Decode the base64 encoded image data
         const imageData = uploadResponse.data;
         setStylizedImage(imageData);
+        setIsUploading(false);
       }
     } catch (error) {
       console.error('Error uploading image:', error);
       // Handle error
+    }}else{
+      alert('Image or Style not found')
     }
   };
 
@@ -187,6 +193,8 @@ const ImageDropZone = () => {
   const removeImage = (setImage, setIsImageLoaded) => {
     setImage(null);
     setIsImageLoaded(false);
+    setStylizedImage(null);
+    setIsImageLoaded2(false);
   };
 
   return (
@@ -266,7 +274,17 @@ const ImageDropZone = () => {
             />
           )}
         </div>
-        <button  className='uploadbtn'onClick={handleUpload}>Upload</button>
+        {isUploading ? (
+        <h4 className='uploading'>Uploading...</h4>
+        ) : (
+          <button
+            className={`uploadbtn ${isUploading ? 'uploadbtn--disabled' : ''}`}
+            disabled={isUploading}
+            onClick={handleUpload}
+          >
+            Upload
+          </button>
+        )}
         <button className='removebtn' onClick={() => removeImage(setImage1, setIsImageLoaded1)}>Remove</button>
         <button className='downloadbtn'onClick={() => handleDownload(stylizedImage)}>Download</button>
         {/* Second ImageDropZone */}

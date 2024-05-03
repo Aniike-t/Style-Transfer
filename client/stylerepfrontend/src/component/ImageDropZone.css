@@ -205,6 +205,18 @@ button:hover{
 .uploadbtn{
   margin-top: 20%;
 }
+.uploading{
+  position: absolute;
+  margin-top: -4.9%;
+  margin-left: -0.2%;
+  padding: 10px;
+  border-radius: 7px;
+  background-color: rgba(9, 9, 9, 0);
+  color: rgba(255, 236, 236, 0.762);
+  cursor: pointer;
+  font-weight: bold;
+  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
 p{
   color:white;
   font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;

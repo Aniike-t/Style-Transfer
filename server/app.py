@@ -315,6 +315,7 @@ def sky_replacement():
     print(img_path)
     
     style_number = int(request.form.get('styleNumber')) if 'styleNumber' in request.form else 1
+    print(style_number)
     
     style_path = f"styles/styleimage{style_number}.png"  # Determine the style image path based on the style number
     detect_sky(img_path)

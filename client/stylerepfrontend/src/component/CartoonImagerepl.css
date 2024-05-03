@@ -12,7 +12,10 @@ span {
     overflow-y: scroll;
     overflow-x: hidden;
   }
-  
+  .cartoonoutput{
+    width: 90%;
+    border-radius: 7px;
+  }
   .dropped-image {
     border-radius: 5px;
     max-width: 100%;
@@ -156,16 +159,7 @@ span {
     padding: 5px;
     border-radius: 0px 0px 7px 7px;
   }
-  .file-input-text2{
-    color:rgba(255, 236, 236, 0.762);
-    margin-top: -52%;
-    position:fixed;
-    font-size: 21px;
-    overflow: hidden;
-    border:1px dashed rgba(255, 236, 236, 0.762);
-    padding: 6px;
-    border-radius: 0px 0px 7px 7px;
-  }
+
   .sidebar {
     width: 250px;
     height: 100vh;

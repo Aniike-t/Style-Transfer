@@ -27,6 +27,7 @@ const VideoStyleReplication = () => {
   const [selectedStyle, setSelectedStyle] = useState(1); //number
   const [outputVideo, setOutputVideo] = useState(null); //files
   const [video, setVideo] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
 
   const videoRef1 = useRef(null);
@@ -229,7 +230,9 @@ function base64toBlob(base64Data, contentType) {
 
   const handleUpload = async (event) => {
     event.preventDefault();
-    if (video) {
+    setIsUploading(true); // Set isUploading to true when the upload begins
+    
+    if (video && selectedStyle) {
       const formData = new FormData();
       formData.append('file', video);
       formData.append('styleNumber', selectedStyle);
@@ -242,18 +245,22 @@ function base64toBlob(base64Data, contentType) {
   
         if (response.status === 200) {
           const encodedVideo = response.data.encoded_video;
-          console.log("video: "+encodedVideo)
           setOutputVideo(encodedVideo);
-          setIsVideoLoaded2(true)
+          setIsVideoLoaded2(true);
         }
       } catch (error) {
         console.error('Error uploading video:', error);
-        setIsVideoLoaded2(false)
+        // Handle error
+      } finally {
+        setIsUploading(false); // Set isUploading to false when upload completes or encounters an error
       }
     } else {
-      alert('No video to upload.');
+      alert('No video or Style to upload.');
+      setIsUploading(false); // Set isUploading to false if there's no video or style to upload
     }
   };
+  
+  
   const handleStyleSelection = (style) => {
     setSelectedStyle(style);
   };
@@ -340,6 +347,15 @@ function base64toBlob(base64Data, contentType) {
             <div className="progress-bar" style={{ width: `${videoLoadingProgress1}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
           )}
         </div>
+        {isUploading ? (
+        <h4 className='uploading'>Uploading...</h4>
+        ) : (
+          <button
+            className={`uploadbtn ${isUploading ? 'uploadbtn--disabled' : ''}`}
+            disabled={isUploading}
+            onClick={handleUpload}
+          >Upload</button>
+        )}
         {/* Second ImageDropZone */}
         <div
           className={`video-drop-zone ${isDragging ? 'drag-over' : ''}`}
@@ -387,7 +403,6 @@ function base64toBlob(base64Data, contentType) {
             <div className="progress-bar" style={{ width: `${outputVideo}%`, backgroundColor: 'rgba(255, 236, 236, 0.762)' }}></div>
           )}
         </div>
-        <button className="uploadbtn" onClick={handleUpload}>Upload</button>
         <button className='removebtn' onClick={() => removeVideo(setVideo1, setIsVideoLoaded1)}>Remove</button>
         <button className='downloadbtn' onClick={handleDownload}>Download</button>
 

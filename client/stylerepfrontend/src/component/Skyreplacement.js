@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect} from 'react';
 import '../component/ImageDropZone.css';
 import dragDropLogo from '../component/dragdropicon.png';
 import { Link } from 'react-router-dom';
@@ -17,13 +17,48 @@ const SkyReplacment = () => {
   const [isImageLoaded2, setIsImageLoaded2] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-
+  const [shuffledImages, setShuffledImages] = useState([]);
   const [styleSelected, setStyleSelected] = useState(null);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
+  const imageFilenames = [
+    '001.jpg',
+    '002.jpg',
+    '003.jpg',
+    '004.jpg',
+    '005.jpg',
+    '006.jpg',
+    '007.jpg',
+    '008.jpg',
+    '009.jpg',
+    '010.jpg',
+    '011.jpg',
+    '012.jpg',
+    '013.jpg',
+    '014.jpg',
+    '015.jpg'
+  ];
 
+  // Function to shuffle and select 5 random filenames
+  function getRandomImageFilenames(array, count) {
+    const shuffledArray = array.sort(() => 0.5 - Math.random());
+    return shuffledArray.slice(0, count);
+  }
+  
+  useEffect(() => {
+    // Get 5 random image filenames when component mounts
+    const randomImageFilenames = getRandomImageFilenames(imageFilenames, 5);
+    setShuffledImages(randomImageFilenames);
+  }, []); 
+
+  const renderedImages = shuffledImages.map((filename, index) => (
+    <div className="section" onClick={() => handleHorizontalImageClick(require(`../assets/${filename}`), filename)} key={index}>
+      <img src={require(`../assets/${filename}`)} alt="" className={`sample-image ${selectedImage === require(`../assets/${filename}`) ? 'glow' : ''}`} />
+      <div className="section-label">Style {parseInt(filename.replace('.jpg', ''), 10)}</div>
+    </div>
+  ));
   const handleDrop = (event, setImage, setCursorStyle, setIsImageLoaded) => {
     event.preventDefault();
     setIsDragging(false);
@@ -84,13 +119,19 @@ const SkyReplacment = () => {
     }
   };
 
-  const handleDownload = (imageData) => {
-    if (imageData) {
+  const handleDownload = () => {
+    if (stylizedImage) {
+      // Create a link element
       const link = document.createElement('a');
-      link.href = `data:image/jpeg;base64,${imageData}`;
-      link.download = 'image.jpg'; // Specify the filename with the appropriate extension
+      // Set the href attribute to the stylized image data
+      link.href = `data:image/jpeg;base64,${stylizedImage}`;
+      // Set the download attribute with the desired file name
+      link.download = 'stylized_image.jpg';
+      // Append the link to the body
       document.body.appendChild(link);
+      // Simulate a click on the link
       link.click();
+      // Remove the link from the body
       document.body.removeChild(link);
     } else {
       alert('No image to download.');
@@ -107,14 +148,16 @@ const SkyReplacment = () => {
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [stylizedImage, setStylizedImage] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
 
   const handleUpload = async () => {
     const formData = new FormData();
     formData.append('file', selectedFile);
     formData.append('styleNumber', styleSelected); // Append the style number to the FormData
-  
+    if(selectedFile  && styleSelected){
     try {
+      setIsUploading(true);
       // Upload the image to the Flask backend
       const uploadResponse = await axios.post('http://127.0.0.1:5000/uploadforskyreplacement', formData, {
         headers: {
@@ -127,12 +170,14 @@ const SkyReplacment = () => {
       if (uploadResponse.status === 200) {
         // Decode the base64 encoded image data
         const imageData = uploadResponse.data;
-        console.log("this is image data"+imageData);
         setStylizedImage(imageData);
+        setIsUploading(false);
       }
     } catch (error) {
       console.error('Error uploading image:', error);
       // Handle error
+    }}else{
+      alert('Image or Style not found')
     }
   };
 
@@ -221,7 +266,17 @@ const SkyReplacment = () => {
             />
           )}
         </div>
-        <button className="uploadbtn" onClick={handleUpload}>Upload</button>
+        {isUploading ? (
+        <h4 className='uploading'>Uploading...</h4>
+        ) : (
+          <button
+            className={`uploadbtn ${isUploading ? 'uploadbtn--disabled' : ''}`}
+            disabled={isUploading}
+            onClick={handleUpload}
+          >
+            Upload
+          </button>
+        )}
         <button className='removebtn' onClick={() => removeImage(setImage1, setIsImageLoaded1)}>Remove</button>
         <button className='downloadbtn' onClick={handleDownload}>Download</button>
         {/* Second ImageDropZone */}
@@ -268,27 +323,8 @@ const SkyReplacment = () => {
         </div>
       </div>
       <div className="horizontal-box">
-        <h1 className='recommendedheader'>Recommended Styles:</h1>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/001.jpg'), 1)}>
-          <img src={require('../assets/001.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/001.jpg') ? 'glow' : ''}`} />
-          <div className="section-label">Style 1</div>
-        </div>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/002.jpg'), 2)}>
-          <img src={require('../assets/002.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/002.jpg') ? 'glow' : ''}`} />
-          <div className="section-label">Style 2</div>
-        </div>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/003.jpg'), 3)}>
-          <img src={require('../assets/003.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/003.jpg') ? 'glow' : ''}`} />
-          <div className="section-label">Style 3</div>
-        </div>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/004.jpg'), 4)}>
-          <img src={require('../assets/004.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/004.jpg') ? 'glow' : ''}`} />
-          <div className="section-label">Style 4</div>
-        </div>
-        <div className="section" onClick={() => handleHorizontalImageClick(require('../assets/005.jpg'), 5)}>
-          <img src={require('../assets/005.jpg')} alt="" className={`sample-image ${selectedImage === require('../assets/005.jpg') ? 'glow' : ''}`} />
-          <div className="section-label">Style 5</div>
-        </div>
+      <h1 className='recommendedheader'>Recommended Styles:</h1>
+      {renderedImages}
       </div>
     </div>
   );

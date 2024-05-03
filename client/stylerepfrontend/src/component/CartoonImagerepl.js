@@ -89,13 +89,19 @@ const ImageDropZone = () => {
     }
   };
 
-  const handleDownload = (imageData) => {
-    if (imageData) {
+  const handleDownload = () => {
+    if (stylizedImage) {
+      // Create a link element
       const link = document.createElement('a');
-      link.href = `data:image/jpeg;base64,${imageData}`;
-      link.download = 'image.jpg'; // Specify the filename with the appropriate extension
+      // Set the href attribute to the stylized image data
+      link.href = `data:image/jpeg;base64,${stylizedImage}`;
+      // Set the download attribute with the desired file name
+      link.download = 'stylized_image.jpg';
+      // Append the link to the body
       document.body.appendChild(link);
+      // Simulate a click on the link
       link.click();
+      // Remove the link from the body
       document.body.removeChild(link);
     } else {
       alert('No image to download.');
@@ -116,32 +122,34 @@ const ImageDropZone = () => {
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [stylizedImage, setStylizedImage] = useState(null);
-
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleUpload = async () => {
     const formData = new FormData();
-    formData.append('file', selectedFile);
-    
+    formData.append('file', selectedFile); // Append the style number to the FormData
+    if(selectedFile){
     try {
+      setIsUploading(true);
       // Upload the image to the Flask backend
-      const uploadResponse = await axios.post('http://127.0.0.1:5000/uploadforcartoonstylerep', formData, {
+      const uploadResponse = await axios.post('http://127.0.0.1:5000/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-      
       console.log(uploadResponse.data); // Log the response from the upload endpoint
-      
+  
       // If the upload was successful, set the stylized image
-      if (uploadResponse.status === 200 && uploadResponse.data.output_images && uploadResponse.data.output_images.length > 0) {
-        const imageData = uploadResponse.data.output_images[0]; // Assuming there's only one image in the array
+      if (uploadResponse.status === 200) {
+        // Decode the base64 encoded image data
+        const imageData = uploadResponse.data;
         setStylizedImage(imageData);
-      } else {
-        console.error('No image data found in the response.');
+        setIsUploading(false);
       }
     } catch (error) {
       console.error('Error uploading image:', error);
       // Handle error
+    }}else{
+      alert('Image or Style not found')
     }
   };
   const refreshPage = () => {
@@ -225,7 +233,17 @@ const ImageDropZone = () => {
             />
           )}
         </div>
-        <button className="uploadbtn" onClick={handleUpload}>Upload</button>
+        {isUploading ? (
+        <h4 className='uploading'>Uploading...</h4>
+        ) : (
+          <button
+            className={`uploadbtn ${isUploading ? 'uploadbtn--disabled' : ''}`}
+            disabled={isUploading}
+            onClick={handleUpload}
+          >
+            Upload
+          </button>
+        )}
         <button className='removebtn' onClick={() => removeImage(setImage1, setIsImageLoaded1)}>Remove</button>
         <button className='downloadbtn' onClick={handleDownload}>Download</button>
         {/* Second ImageDropZone */}
@@ -245,8 +263,8 @@ const ImageDropZone = () => {
         >
           {!isImageLoaded2 && (
             <>
+              <img className='cartoonoutput'src={`data:image/jpeg;base64,${stylizedImage}`} alt="" />
               <span className='file-input-text2'>OUTPUT IMAGE</span>
-              <img src={`data:image/jpeg;base64,${stylizedImage}`} alt="" style={{ width: '100%', height: 'auto'}}/>
               <input
                 id="fileInput2"
                 type="file"
