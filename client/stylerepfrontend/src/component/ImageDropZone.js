@@ -195,6 +195,7 @@ const ImageDropZone = () => {
     setIsImageLoaded(false);
     setStylizedImage(null);
     setIsImageLoaded2(false);
+    setIsUploading(false);
   };
 
   return (

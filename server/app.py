@@ -9,6 +9,7 @@ import io
 import base64
 from scipy import spatial
 import shutil
+import glob
 
 app = Flask(__name__)
 CORS(app)
@@ -20,10 +21,12 @@ UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'upload
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['PREPROCESSING_FOLDER'] = 'preprocessing_frames'
+app.config['CARTOON_FOLDER'] = 'cartoon_frames'
 
 # Load the TensorFlow Hub model only once
-hub_model = hub.load('https://www.kaggle.com/models/google/arbitrary-image-stylization-v1/TensorFlow1/256/2')
-
+# hub_model = hub.load('https://www.kaggle.com/models/google/arbitrary-image-stylization-v1/TensorFlow1/256/2')
+hub_model = hub.load('models/modelStyleTransfer')
 
 folder_path = "uploads/skystylerepupload/tempimg"
 
@@ -35,6 +38,21 @@ if not os.path.exists(folder_path):
         print(f"Failed to create directory: {e}")
 else:
     print("Folder already exists.")
+
+
+
+def remove_directory(directory):
+    if os.path.exists(directory):
+        shutil.rmtree(directory)
+        print(f"Directory '{directory}' removed successfully.")
+    else:
+        print(f"Directory '{directory}' does not exist.")
+
+
+remove_directory('output_frames')
+remove_directory('stylized_frames')
+remove_directory('videotempfolder')
+
 
 
 @app.route('/upload', methods=['POST'])
@@ -312,12 +330,15 @@ def sky_replacement():
     file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
     img_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
     og_img = img_path
+    
     print(img_path)
+    print(request.form.get('styleNumber'))
     
     style_number = int(request.form.get('styleNumber')) if 'styleNumber' in request.form else 1
-    print(style_number)
-    
-    style_path = f"styles/styleimage{style_number}.png"  # Determine the style image path based on the style number
+    print("stylenumber: "+str(style_number))
+    # Determine the style image path based on the style number
+    style_image_path = f"styles/styleimage{style_number}.png"
+    print("stylepath: "+style_image_path)# Determine the style image path based on the style number
     detect_sky(img_path)
     
     mask_img = os.path.join('uploads/skystylerepupload/tempimg', "denoised.png")
@@ -330,7 +351,7 @@ def sky_replacement():
     
     height, width = inverted_img.shape[:2]
     
-    stylereplicationimage('uploads/skystylerepupload/tempimg/inverted_img.png', style_path, 2, 1024)
+    stylereplicationimage('uploads/skystylerepupload/tempimg/inverted_img.png', style_image_path, 2, 1024)
     stylized_sky = os.path.join('uploads/skystylerepupload/tempimg', "stylized_img_for_sky.png")
     encoded_image_data = mask_transfer('uploads/skystylerepupload/tempimg/inverted_img.png', stylized_sky, mask_img, width, height)
     encoded_image_data_base64 = base64.b64encode(encoded_image_data).decode('utf-8')
@@ -393,10 +414,12 @@ def denoiseplusbw(img_path):
 
 @app.route('/uploadvideoforstylerep', methods=['POST'])
 def uploadvideoforstylerep():
+    
     # Define output folders
     output_folder = 'output_frames'
     stylized_output_folder = 'stylized_frames'
     videotempfolder = 'videotempfolder'
+    
     os.makedirs(output_folder, exist_ok=True)
     os.makedirs(stylized_output_folder, exist_ok=True)
     os.makedirs(videotempfolder, exist_ok=True)
@@ -441,8 +464,13 @@ def uploadvideoforstylerep():
     # Open the video
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS)
-    
-    user_defined_fps = 23
+
+    # Define user-defined fps options
+    user_defined_fps_options = [13]
+
+    # Choose appropriate user_defined_fps based on actual fps
+    user_defined_fps = 1
+
     # Process video frames
     frame_count = 0
     while cap.isOpened():
@@ -451,7 +479,7 @@ def uploadvideoforstylerep():
             break
         frame_count += 1
 
-        if frame_count % int(fps / user_defined_fps) == 0:
+        if frame_count % user_defined_fps == 0:
             # Save original frame
 
             cv2.imwrite(os.path.join(output_folder, f"frame_{frame_count}.jpg"), frame)
@@ -500,10 +528,7 @@ def uploadvideoforstylerep():
     # Write each frame after converting RGB to BGR
     for image_file in image_files:
         # Read the image
-        image = cv2.imread(image_file)
-
-        # Convert RGB to BGR
-        
+        image = cv2.imread(image_file)        
 
         # Write the converted frame to the output video
         output_video.write(image)
@@ -559,7 +584,7 @@ def cartoon(img_p):
     psi = pi(si, td=512)
 
     # model dataflow 
-    m = '1.tflite'
+    m = 'models/CartoonStyleModel/1.tflite'
     i = tf.lite.Interpreter(model_path=m)
     ind = i.get_input_details()
     i.allocate_tensors()
@@ -609,7 +634,113 @@ def CartoonStyleRep():
 
 ### END
 
+@app.route('/uploadforcartoonstylerepvideo', methods=['POST'])
+def CartoonStyleRepVideo():
+    
+    videotempfolder = 'videotempfolder'
+    remove_directory(videotempfolder)
+    remove_directory('preprocessing_frames')
+    remove_directory('cartoon_frames')
+    
+    os.makedirs(videotempfolder, exist_ok=True)
+    
+    def li(p):
+        img = cv2.imread(p)
+        img = img.astype(np.float32)/127.5 - 1
+        img = np.expand_dims(img, 0)
+        img = tf.convert_to_tensor(img)
+        return img
 
+    def pi(img, td=448):
+        shp = tf.cast(tf.shape(img)[1:-1], tf.float32)
+        sd = min(shp)
+        scl = td/sd
+        nhp = tf.cast(shp*scl, tf.int32)
+        img = tf.image.resize(img, nhp)
+        img = tf.image.resize_with_crop_or_pad(img, td, td)
+        return img
+
+    def cartoon(img_p):
+        si = li(img_p)
+        psi = pi(si, td=512)
+        m = 'models/CartoonStyleModel/1.tflite'
+        i = tf.lite.Interpreter(model_path=m)
+        ind = i.get_input_details()
+        i.allocate_tensors()
+        i.set_tensor(ind[0]['index'], psi)
+        i.invoke()
+        r = i.tensor(i.get_output_details()[0]['index'])()
+        o = (np.squeeze(r) + 1.0) * 127.5
+        o = np.clip(o, 0, 255).astype(np.uint8)
+        # o = cv2.cvtColor(o, cv2.COLOR_BGR2RGB)
+        return o
+
+    def convert_frames_to_video(frame_folder, output_video_path, fps=30):
+        frame_files = sorted(glob.glob(os.path.join(frame_folder, '*.jpg')))
+        if not frame_files:
+            print("No frames found.")
+            return
+        frame = cv2.imread(frame_files[0])
+        frame_height, frame_width, _ = frame.shape
+        fourcc = cv2.VideoWriter_fourcc(*'h264')
+        output_video = cv2.VideoWriter(output_video_path, fourcc, fps, (frame_width, frame_height))
+        for frame_file in frame_files:
+            frame = cv2.imread(frame_file)
+            output_video.write(frame)
+        output_video.release()
+
+    user_defined_fps = 1
+
+    if 'file' not in request.files:
+        return 'No file part', 400
+    file = request.files['file']
+    if file.filename == '':
+        return 'No selected file', 400
+
+    video_path = os.path.join(videotempfolder, file.filename)
+    file.save(video_path)
+
+    preprocessing_folder = app.config['PREPROCESSING_FOLDER']
+    cartoon_folder = app.config['CARTOON_FOLDER']
+    shutil.rmtree(preprocessing_folder, ignore_errors=True)
+    shutil.rmtree(cartoon_folder, ignore_errors=True)
+    os.makedirs(preprocessing_folder)
+    os.makedirs(cartoon_folder)
+
+    cap = cv2.VideoCapture(video_path)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_count = 0
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        frame_count += 1
+
+        if frame_count % int(fps / user_defined_fps) == 0:
+            # Save original frame
+            cv2.imwrite(os.path.join(preprocessing_folder, f"frame_{frame_count}.jpg"), frame)
+
+            # Process the frame
+            input_frame_path = os.path.join(preprocessing_folder, f"frame_{frame_count}.jpg")
+            output_frame_path = os.path.join(cartoon_folder, f"cartoon_{frame_count}.jpg")
+            cartoon_frame = cartoon(input_frame_path)
+            cv2.imwrite(output_frame_path, cartoon_frame)
+
+    cap.release()
+
+    output_video_path = os.path.join(videotempfolder, 'output_video.mp4')
+    convert_frames_to_video(cartoon_folder, output_video_path, fps=user_defined_fps)
+
+    with open(output_video_path, 'rb') as f:
+        encoded_video = base64.b64encode(f.read()).decode('utf-8')
+
+    # os.remove(video_path)
+    # os.remove(output_video_path)
+    shutil.rmtree(videotempfolder, ignore_errors=True)
+    shutil.rmtree(preprocessing_folder, ignore_errors=True)
+    shutil.rmtree(cartoon_folder, ignore_errors=True)
+
+    return jsonify({'encoded_video': encoded_video})
 
 if __name__ == '__main__':
     app.run(debug=True)

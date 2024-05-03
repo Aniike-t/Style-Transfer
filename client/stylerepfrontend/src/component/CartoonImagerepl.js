@@ -21,8 +21,9 @@ const ImageDropZone = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [selectedImage, setSelectedImage] = useState(null);
-  const [styleSelected, setStyleSelected] = useState(null);
+  const [, setStyleSelected] = useState(null);
 
+  const [isUploading, setIsUploading] = useState(false);
 
 
   const toggleSidebar = () => {
@@ -89,19 +90,13 @@ const ImageDropZone = () => {
     }
   };
 
-  const handleDownload = () => {
-    if (stylizedImage) {
-      // Create a link element
+  const handleDownload = (imageData) => {
+    if (imageData) {
       const link = document.createElement('a');
-      // Set the href attribute to the stylized image data
-      link.href = `data:image/jpeg;base64,${stylizedImage}`;
-      // Set the download attribute with the desired file name
-      link.download = 'stylized_image.jpg';
-      // Append the link to the body
+      link.href = `data:image/jpeg;base64,${imageData}`;
+      link.download = 'image.jpg'; // Specify the filename with the appropriate extension
       document.body.appendChild(link);
-      // Simulate a click on the link
       link.click();
-      // Remove the link from the body
       document.body.removeChild(link);
     } else {
       alert('No image to download.');
@@ -109,8 +104,13 @@ const ImageDropZone = () => {
   };
   
   const removeImage = (setImage, setIsImageLoaded) => {
+
     setImage(null);
     setIsImageLoaded(false);
+    setIsUploading(false)
+    setIsImageLoaded2(false);
+    setStylizedImage(null)
+
   };
   const handleHorizontalImageClick = (imageUrl, styleNumber) => {
     setSelectedImage(imageUrl);
@@ -122,35 +122,37 @@ const ImageDropZone = () => {
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [stylizedImage, setStylizedImage] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
+
 
   const handleUpload = async () => {
     const formData = new FormData();
-    formData.append('file', selectedFile); // Append the style number to the FormData
-    if(selectedFile){
+    formData.append('file', selectedFile);
+    setIsUploading(true);
+    setIsImageLoaded2(true);
     try {
-      setIsUploading(true);
       // Upload the image to the Flask backend
-      const uploadResponse = await axios.post('http://127.0.0.1:5000/upload', formData, {
+      const uploadResponse = await axios.post('http://127.0.0.1:5000/uploadforcartoonstylerep', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
+      
       console.log(uploadResponse.data); // Log the response from the upload endpoint
-  
+      
       // If the upload was successful, set the stylized image
-      if (uploadResponse.status === 200) {
-        // Decode the base64 encoded image data
-        const imageData = uploadResponse.data;
+      if (uploadResponse.status === 200 && uploadResponse.data.output_images && uploadResponse.data.output_images.length > 0) {
+        const imageData = uploadResponse.data.output_images[0]; // Assuming there's only one image in the array
         setStylizedImage(imageData);
-        setIsUploading(false);
+      } else {
+        console.error('No image data found in the response.');
       }
     } catch (error) {
+      setIsUploading(!true)
       console.error('Error uploading image:', error);
-      // Handle error
-    }}else{
-      alert('Image or Style not found')
+        // Handle error
     }
+    setIsUploading(false)
+    setIsImageLoaded2(false);
   };
   const refreshPage = () => {
     window.location.reload();
@@ -263,14 +265,19 @@ const ImageDropZone = () => {
         >
           {!isImageLoaded2 && (
             <>
-              <img className='cartoonoutput'src={`data:image/jpeg;base64,${stylizedImage}`} alt="" />
               <span className='file-input-text2'>OUTPUT IMAGE</span>
+              <img src={`data:image/jpeg;base64,${stylizedImage}`} alt="" style={{ width: '100%', height: 'auto'}}/>
               <input
                 id="fileInput2"
                 type="file"
                 accept="image/*, .png, .jpeg, .heic, .webp"
                 onChange={(event) => handleFileInput(event, setImage2, setCursorStyle2, setIsImageLoaded2)}
-                style={{ display: 'none' }}
+                style={{ display: 'none',
+                          width: 'auto',
+                          height: 'auto',
+                          objectFit: 'cover',
+                          borderRadius: '5px',
+                 }}
               />
             </>
           )}

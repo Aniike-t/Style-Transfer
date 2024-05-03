@@ -59,6 +59,7 @@ const SkyReplacment = () => {
       <div className="section-label">Style {parseInt(filename.replace('.jpg', ''), 10)}</div>
     </div>
   ));
+
   const handleDrop = (event, setImage, setCursorStyle, setIsImageLoaded) => {
     event.preventDefault();
     setIsDragging(false);
@@ -97,6 +98,13 @@ const SkyReplacment = () => {
     event.preventDefault();
     setIsDragging(false);
     setCursorStyle('pointer');
+  };
+
+  const handleHorizontalImageClick = (imageUrl, filename) => {
+    const styleNumber = parseInt(filename.replace('.jpg', ''), 10);
+    setSelectedImage(imageUrl);
+    setIsImageLoaded2(true);
+    setStyleSelected(styleNumber);
   };
 
   const handleFileInput = (event, setImage, setCursorStyle, setIsImageLoaded) => {
@@ -138,12 +146,7 @@ const SkyReplacment = () => {
     }
   };
 
-  const handleHorizontalImageClick = (imageUrl, styleNumber) => {
-    setSelectedImage(imageUrl);
-    setImage2(imageUrl);
-    setIsImageLoaded2(true);
-    setStyleSelected(styleNumber);
-  };
+
 
 
   const [selectedFile, setSelectedFile] = useState(null);
@@ -153,6 +156,7 @@ const SkyReplacment = () => {
 
   const handleUpload = async () => {
     const formData = new FormData();
+    console.log(styleSelected)
     formData.append('file', selectedFile);
     formData.append('styleNumber', styleSelected); // Append the style number to the FormData
     if(selectedFile  && styleSelected){
@@ -187,7 +191,11 @@ const SkyReplacment = () => {
   const removeImage = (setImage, setIsImageLoaded) => {
     setImage(null);
     setIsImageLoaded(false);
+    setStylizedImage(null);
+    setIsImageLoaded2(false);
+    setIsUploading(false);
   };
+
 
   return (
     <div className={`content-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
@@ -324,7 +332,7 @@ const SkyReplacment = () => {
       </div>
       <div className="horizontal-box">
       <h1 className='recommendedheader'>Recommended Styles:</h1>
-      {renderedImages}
+        {renderedImages}
       </div>
     </div>
   );

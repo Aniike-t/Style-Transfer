@@ -7,3 +7,6 @@ server/uploads/skystylerepupload/tempimg/stylized_img_for_sky.png
 
 
 
+'http://127.0.0.1:5000/uploadforcartoonstylerepvideo'
+
+

@@ -265,8 +265,12 @@ function base64toBlob(base64Data, contentType) {
     setSelectedStyle(style);
   };
   const removeVideo = (setVideo1, setIsVideoLoaded1) => {
+    setVideo(null);
     setVideo1(null);
     setIsVideoLoaded1(false);
+    setIsVideoLoaded2(false);
+    setOutputVideo(null);
+
   };
   return (
     <div className={`content-container1 ${sidebarOpen ? 'sidebar-open' : ''}`}>
