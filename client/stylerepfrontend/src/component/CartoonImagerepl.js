@@ -178,6 +178,10 @@ const ImageDropZone = () => {
           <p >Cartoon Style Transfer</p>
         </Link>
         <div className='icon-bar1'></div>
+        <Link to='/cv' onClick={toggleSidebar} className='link-style'>
+          <p>Cartoon Video Transfer</p>
+        </Link>
+        <div className='icon-bar1'></div>
       </div>
       <div className="menu-bar-icon" onClick={toggleSidebar}>
         <Hamburger toggled={sidebarOpen} toggle={setSidebarOpen} size={35} rounded />

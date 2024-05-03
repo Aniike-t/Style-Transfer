@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import '../component/VideoDropZone.css';
+import '../component/ImageDropZone.css';
 import dragDropLogo from '../component/dragdropicon.png';
 import { Link } from 'react-router-dom';
 import Hamburger from 'hamburger-react';
@@ -289,6 +289,10 @@ function base64toBlob(base64Data, contentType) {
         <div className='icon-bar1'></div>
         <Link to='/c' onClick={toggleSidebar} className='link-style'>
           <p>Cartoon Style Transfer</p>
+        </Link>
+        <div className='icon-bar1'></div>
+        <Link to='/cv' onClick={toggleSidebar} className='link-style'>
+          <p>Cartoon Video Transfer</p>
         </Link>
         <div className='icon-bar1'></div>
       </div>
