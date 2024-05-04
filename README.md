@@ -1,9 +1,9 @@
 **TO RUN LOCALLY FOLLOWING COMMANDS ARE TO BE RUN:**
 
 <br>cd client(In 1st terminal)</br>
-cd stylerepfrontend
-npm install axios
-npm install(to install node package manager i.e:node_modules)
+<br>cd stylerepfrontend</br>
+<br>npm install axios</br>
+<br>npm install(to install node package manager i.e:node_modules)</br>
 npm install react-router-dom
 npm install hamburger-react
 npm start
