@@ -1,6 +1,6 @@
 **TO RUN LOCALLY FOLLOWING COMMANDS ARE TO BE RUN:**
 
-cd client(In 1st terminal)
+<br>cd client(In 1st terminal)</br>
 cd stylerepfrontend
 npm install axios
 npm install(to install node package manager i.e:node_modules)
