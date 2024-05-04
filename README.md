@@ -4,15 +4,15 @@
 <br>cd stylerepfrontend</br>
 <br>npm install axios</br>
 <br>npm install(to install node package manager i.e:node_modules)</br>
-npm install react-router-dom
-npm install hamburger-react
-npm start
+<br>npm install react-router-dom</br>
+<br>npm install hamburger-react</br>
+<br>npm start</br>
+<br></br>
+<br>cd server(In 2nd terminal)</br>
+<br>pip install tensorflow( Run this command in app.py)</br>
+<br>python app.py</br>
 
-cd server(In 2nd terminal)
-pip install tensorflow( Run this command in app.py)
-python app.py
-
-**Following are the Outputs:**
+**FOLLOWING ARE THE OUTPUTS:**
 ![Style Transfer](https://github.com/Aniike-t/ImgStyleReplication/assets/114077388/840d720f-3286-4d28-a205-3274525f7993)
 
 
