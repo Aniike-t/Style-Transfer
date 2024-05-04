@@ -1,3 +1,5 @@
-![image](https://github.com/Aniike-t/ImgStyleReplication/assets/114077388/e818e089-d3ff-4584-9d2e-52d90f7c1bca)
-![image](https://github.com/Aniike-t/ImgStyleReplication/assets/114077388/54da2ab8-a8b6-4bfa-852f-c1a2d6ad5083)
-![image](https://github.com/Aniike-t/ImgStyleReplication/assets/114077388/3ad32962-a49a-4358-94dd-a19f9a512aa3)
+![Style Transfer](https://github.com/Aniike-t/ImgStyleReplication/assets/114077388/840d720f-3286-4d28-a205-3274525f7993)
+
+
+https://github.com/Aniike-t/ImgStyleReplication/assets/114077388/0753e6c0-6794-4383-9798-af31a7fcd03a
+
