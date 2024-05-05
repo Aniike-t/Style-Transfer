@@ -1,5 +1,9 @@
 # **Run Locally**
 
+#   Description
+Leveraging advanced computer vision techniques, including the powerful VGG19 and CartoonGAN models. This project enables users to seamlessly blend the content of images/videos with the artistic style of another.
+
+
 ## Client Side
 
 1. Open the terminal and navigate to the client directory:
