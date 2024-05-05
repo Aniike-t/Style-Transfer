@@ -2,8 +2,8 @@
 
 <br>cd client(In 1st terminal)</br>
 <br>cd stylerepfrontend</br>
-<br>npm install axios</br>
 <br>npm install(to install node package manager i.e:node_modules)</br>
+<br>npm install axios</br>
 <br>npm install react-router-dom</br>
 <br>npm install hamburger-react</br>
 <br>npm start</br>
